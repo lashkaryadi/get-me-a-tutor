@@ -8,6 +8,14 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Feed from "./pages/Feed";
 import Olympiad from "./pages/Olympiad";
+import VerifyOTP from "./pages/VerifyOTP";
+import ForgotPassword from "./pages/ForgotPassword";
+import TutorProfile from "./pages/TutorProfile";
+import PostJob from "./pages/PostJob";
+import ApplyJob from "./pages/ApplyJob";
+import InstituteDashboard from "./pages/InstituteDashboard";
+import TrackApplication from "./pages/TrackApplication";
+import SuperadminDashboard from "./pages/SuperadminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,10 +30,17 @@ const App = () => (
           <Route path="/" element={<Home />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/jobs" element={<Feed />} />
+          <Route path="/tutor/:id" element={<TutorProfile />} />
+          <Route path="/post-job" element={<PostJob />} />
+          <Route path="/apply/:id" element={<ApplyJob />} />
+          <Route path="/institute/dashboard" element={<InstituteDashboard />} />
+          <Route path="/track-application" element={<TrackApplication />} />
+          <Route path="/admin" element={<SuperadminDashboard />} />
           <Route path="/olympiad" element={<Olympiad />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -12,7 +12,7 @@ import {
   SlidersHorizontal,
   BookOpen,
   Clock,
-  DollarSign,
+  IndianRupee,
   Heart,
   ChevronDown,
   X,
@@ -383,7 +383,7 @@ export default function Feed() {
                       {job.location}
                     </span>
                     <span className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4" />
+                      <IndianRupee className="h-4 w-4" />
                       {job.salary}
                     </span>
                     <span className="flex items-center gap-1">

@@ -355,15 +355,16 @@ export default function Feed() {
         ) : (
           <div className="space-y-4">
             {jobs.map((job) => (
-              <Link
+              <div
                 key={job.id}
-                to={`/job/${job.id}`}
                 className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 transition-all hover:border-primary hover:shadow-lg sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex-1">
                   <div className="mb-2 flex items-center gap-3">
-                    <h3 className="font-semibold text-foreground group-hover:text-primary">
-                      {job.title}
+                    <h3>
+                      <Link to={`/apply/${job.id}`} className="font-semibold text-foreground group-hover:text-primary">
+                        {job.title}
+                      </Link>
                     </h3>
                     {job.urgent && (
                       <span className="rounded-full bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive">
@@ -392,8 +393,10 @@ export default function Feed() {
                     </span>
                   </div>
                 </div>
-                <Button>Apply Now</Button>
-              </Link>
+                <Button asChild>
+                  <Link to={`/apply/${job.id}`}>Apply Now</Link>
+                </Button>
+              </div>
             ))}
           </div>
         )}

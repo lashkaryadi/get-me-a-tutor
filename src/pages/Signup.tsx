@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,9 +62,18 @@ export default function Signup() {
     phone: "",
   });
 
+  const navigate = useNavigate();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Signup data:", { ...formData, role: selectedRole });
+
+    // In a real app, you'd send signup data to the backend here.
+    // After creating the account (or initiating verification), redirect to Verify OTP page.
+    const contact = formData.email || formData.phone;
+    const type = formData.email ? "email" : "phone";
+
+    navigate(`/verify-otp?type=${type}&contact=${encodeURIComponent(contact)}`);
   };
 
   return (

@@ -9,13 +9,14 @@ import {
   GraduationCap,
   Building2,
   User,
+  Users,
   ArrowRight,
   CheckCircle,
   Eye,
   EyeOff,
 } from "lucide-react";
 
-type UserRole = "student" | "tutor" | "institute";
+type UserRole = "student" | "tutor" | "institute" | "parent";
 
 const roles = [
   {
@@ -23,6 +24,12 @@ const roles = [
     icon: User,
     title: "Student",
     description: "Find and connect with expert tutors",
+  },
+  {
+    id: "parent" as UserRole,
+    icon: Users,
+    title: "Parent",
+    description: "Find tutors for your children",
   },
   {
     id: "tutor" as UserRole,
@@ -81,7 +88,7 @@ export default function Signup() {
               {/* Role Selection */}
               <div className="space-y-4">
                 <Label className="text-base font-semibold">I want to join as</Label>
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {roles.map((role) => (
                     <button
                       key={role.id}

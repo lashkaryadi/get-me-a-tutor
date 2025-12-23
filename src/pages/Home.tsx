@@ -52,27 +52,27 @@ const stats = [
 
 const testimonials = [
   {
-    name: "Sarah Johnson",
+    name: "Priya Sharma",
     role: "Parent",
-    avatar: "SJ",
+    avatar: "PS",
     content:
       "Finding the right tutor for my daughter was so easy. She improved her math grades from C to A in just 3 months!",
     rating: 5,
   },
   {
-    name: "Michael Chen",
+    name: "Rajesh Kumar",
     role: "College Student",
-    avatar: "MC",
+    avatar: "RK",
     content:
       "The platform helped me find a physics tutor who explained complex concepts in simple terms. Highly recommend!",
     rating: 5,
   },
   {
-    name: "Emily Williams",
+    name: "Ananya Patel",
     role: "High School Student",
-    avatar: "EW",
+    avatar: "AP",
     content:
-      "I love how easy it is to schedule sessions. My tutor is amazing and has helped me prepare for my SATs.",
+      "I love how easy it is to schedule sessions. My tutor is amazing and has helped me prepare for my JEE exams.",
     rating: 5,
   },
 ];

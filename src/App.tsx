@@ -16,6 +16,7 @@ import ApplyJob from "./pages/ApplyJob";
 import InstituteDashboard from "./pages/InstituteDashboard";
 import TrackApplication from "./pages/TrackApplication";
 import SuperadminDashboard from "./pages/SuperadminDashboard";
+import StudentDashboard from "./pages/StudentDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/track-application" element={<TrackApplication />} />
           <Route path="/admin" element={<SuperadminDashboard />} />
           <Route path="/olympiad" element={<Olympiad />} />
+          <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

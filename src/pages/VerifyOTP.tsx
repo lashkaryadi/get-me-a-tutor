@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ArrowLeft, Mail, Phone, CheckCircle } from "lucide-react";
+import apiClient from "@/api/apiClient";
 
 export default function VerifyOTP() {
   const [searchParams] = useSearchParams();
@@ -41,11 +42,21 @@ export default function VerifyOTP() {
     }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     const otpCode = otp.join("");
-    if (otpCode.length === 6) {
-      console.log("Verifying OTP:", otpCode);
+    try {
+      const email = new URLSearchParams(window.location.search).get("contact");
+      
+      const response = await apiClient.post("/auth/verify-email", {
+        email,
+        otp: otpCode,
+      });
+      
       setIsVerified(true);
+      localStorage.removeItem("tempUserId");
+      localStorage.removeItem("verifyEmail");
+    } catch (error: any) {
+      alert(error.response?.data?.message || "OTP verification failed");
     }
   };
 

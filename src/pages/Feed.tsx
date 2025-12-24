@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,9 @@ import {
   ChevronDown,
   X,
 } from "lucide-react";
+import apiClient from "@/api/apiClient";
+import { useApi } from "@/hooks/useApi";
+import { useToast } from "@/components/ui/use-toast";
 
 const subjects = [
   "All Subjects",
@@ -117,44 +120,67 @@ const tutors = [
   },
 ];
 
-const jobs = [
-  {
-    id: 1,
-    title: "Mathematics Tutor Needed",
-    institute: "ABC Academy",
-    location: "Mumbai, India",
-    salary: "₹25,000 - ₹35,000/month",
-    type: "Full-time",
-    posted: "2 days ago",
-    urgent: true,
-  },
-  {
-    id: 2,
-    title: "Physics Faculty",
-    institute: "XYZ Coaching",
-    location: "Delhi, India",
-    salary: "₹30,000 - ₹45,000/month",
-    type: "Part-time",
-    posted: "1 week ago",
-    urgent: false,
-  },
-  {
-    id: 3,
-    title: "English Language Trainer",
-    institute: "Global Learning Center",
-    location: "Bangalore, India",
-    salary: "₹20,000 - ₹30,000/month",
-    type: "Full-time",
-    posted: "3 days ago",
-    urgent: true,
-  },
-];
+interface Job {
+  id: string; // ADD THIS
+  title: string;
+  description: string;
+  location: string;
+  salary: string;
+  type: string; // ADD THIS
+  requirements: string[];
+  urgent: boolean; // ADD THIS
+  institute: string; // ADD THIS
+  posted: string; // ADD THIS (date/time string)
+}
 
 export default function Feed() {
+  const { data: jobsData, loading, error } = useApi<Job[]>("/jobs");
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"tutors" | "jobs">("tutors");
   const [selectedSubject, setSelectedSubject] = useState("All Subjects");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [jobs, setJobs] = useState<Job[]>([]); // ADD the useState hook for jobs
+  const [hasShownError, setHasShownError] = useState(false);
+
+  // ADD this function to fetch jobs
+  const fetchJobs = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/jobs");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setJobs(data);
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+      // Only show toast ONCE, not during render
+      if (!hasShownError) {
+        toast({
+          title: "Error",
+          description: "Failed to load jobs. Please try again.",
+          variant: "destructive",
+        });
+        setHasShownError(true);
+      }
+    }
+  };
+
+  // Call fetchJobs in useEffect
+  useEffect(() => {
+    fetchJobs();
+  }, [hasShownError]);
+
+  if (loading) return <div>Loading jobs...</div>;
+
+  if (error) {
+    toast({
+      title: "Error ❌",
+      description: error,
+      variant: "destructive",
+    });
+    return <div>Failed to load jobs</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -211,7 +237,9 @@ export default function Feed() {
             <div className="mt-4 border-t border-border pt-4">
               <div className="flex flex-wrap gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">Subject:</span>
+                  <span className="text-sm font-medium text-foreground">
+                    Subject:
+                  </span>
                   <div className="flex flex-wrap gap-2">
                     {subjects.slice(0, 5).map((subject) => (
                       <button
@@ -354,7 +382,7 @@ export default function Feed() {
           </div>
         ) : (
           <div className="space-y-4">
-            {jobs.map((job) => (
+            {jobs?.map((job) => (
               <div
                 key={job.id}
                 className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 transition-all hover:border-primary hover:shadow-lg sm:flex-row sm:items-center sm:justify-between"
@@ -362,7 +390,10 @@ export default function Feed() {
                 <div className="flex-1">
                   <div className="mb-2 flex items-center gap-3">
                     <h3>
-                      <Link to={`/apply/${job.id}`} className="font-semibold text-foreground group-hover:text-primary">
+                      <Link
+                        to={`/apply/${job.id}`}
+                        className="font-semibold text-foreground group-hover:text-primary"
+                      >
                         {job.title}
                       </Link>
                     </h3>

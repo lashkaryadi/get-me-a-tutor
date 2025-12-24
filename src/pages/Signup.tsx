@@ -15,30 +15,43 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { useMutation } from "@/hooks/useMutation";
 
-type UserRole = "student" | "tutor" | "institute" | "parent";
+interface SignupData {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  role: "student" | "tutor" | "parent" | "institute";
+}
+
+interface SignupResponse {
+  userId: string;
+  email: string;
+  message: string;
+}
 
 const roles = [
   {
-    id: "student" as UserRole,
+    id: "student" as SignupData["role"],
     icon: User,
     title: "Student",
     description: "Find and connect with expert tutors",
   },
   {
-    id: "parent" as UserRole,
+    id: "parent" as SignupData["role"],
     icon: Users,
     title: "Parent",
     description: "Find tutors for your children",
   },
   {
-    id: "tutor" as UserRole,
+    id: "tutor" as SignupData["role"],
     icon: GraduationCap,
     title: "Tutor",
     description: "Share your knowledge and earn",
   },
   {
-    id: "institute" as UserRole,
+    id: "institute" as SignupData["role"],
     icon: Building2,
     title: "Institute",
     description: "Post jobs and hire tutors",
@@ -53,27 +66,38 @@ const benefits = [
 ];
 
 export default function Signup() {
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [selectedRole, setSelectedRole] = useState<SignupData["role"] | null>(
+    null
+  );
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SignupData>({
     name: "",
     email: "",
-    password: "",
     phone: "",
+    password: "",
+    role: "student",
   });
 
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { mutate, isLoading } = useMutation({
+    successMsg: "Signup successful! Check your email for OTP ✅",
+    errorMsg: "Signup failed ❌",
+    onSuccess: (data: SignupResponse) => {
+      // Temp data save करो
+      localStorage.setItem("tempEmail", formData.email);
+      localStorage.setItem("tempUserId", data.userId);
+
+      // OTP page पर जाओ
+      setTimeout(() => {
+        navigate(`/verify-otp?type=email&contact=${formData.email}`);
+      }, 1000);
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Signup data:", { ...formData, role: selectedRole });
-
-    // In a real app, you'd send signup data to the backend here.
-    // After creating the account (or initiating verification), redirect to Verify OTP page.
-    const contact = formData.email || formData.phone;
-    const type = formData.email ? "email" : "phone";
-
-    navigate(`/verify-otp?type=${type}&contact=${encodeURIComponent(contact)}`);
+    await mutate("POST", "/auth/signup", formData);
   };
 
   return (
@@ -96,7 +120,9 @@ export default function Signup() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Role Selection */}
               <div className="space-y-4">
-                <Label className="text-base font-semibold">I want to join as</Label>
+                <Label className="text-base font-semibold">
+                  I want to join as
+                </Label>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {roles.map((role) => (
                     <button
@@ -219,7 +245,10 @@ export default function Signup() {
 
               <p className="text-center text-sm text-muted-foreground">
                 Already have an account?{" "}
-                <Link to="/login" className="font-semibold text-primary hover:underline">
+                <Link
+                  to="/login"
+                  className="font-semibold text-primary hover:underline"
+                >
                   Log in
                 </Link>
               </p>

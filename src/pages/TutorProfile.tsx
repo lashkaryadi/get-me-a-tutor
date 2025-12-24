@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
@@ -19,81 +20,16 @@ import {
   Video,
   IndianRupee,
 } from "lucide-react";
+import { useApi } from "@/hooks/useApi";
+import { useMutation } from "@/hooks/useMutation";
 
-const tutorData: Record<string, {
-  id: number;
+interface TutorProfile {
+  _id: string;
   name: string;
-  subject: string;
-  specialization: string;
-  rating: number;
-  reviews: number;
-  hourlyRate: number;
-  experience: string;
-  location: string;
-  avatar: string;
-  verified: boolean;
-  bio: string;
-  education: string[];
-  languages: string[];
-  subjects: string[];
-  availability: { day: string; slots: string[] }[];
-  totalStudents: number;
-  totalSessions: number;
-  responseTime: string;
-}> = {
-  "1": {
-    id: 1,
-    name: "Dr. Priya Sharma",
-    subject: "Mathematics",
-    specialization: "Calculus, Algebra, Statistics",
-    rating: 4.9,
-    reviews: 234,
-    hourlyRate: 800,
-    experience: "8 years",
-    location: "Mumbai, Maharashtra",
-    avatar: "PS",
-    verified: true,
-    bio: "I am a passionate mathematics educator with a Ph.D. in Applied Mathematics from IIT Bombay. My teaching philosophy focuses on building strong fundamentals and developing problem-solving skills. I have helped over 500 students achieve their academic goals, including JEE and NEET preparations.",
-    education: ["Ph.D. Applied Mathematics - IIT Bombay", "M.Sc. Mathematics - Delhi University", "B.Sc. Mathematics - St. Stephen's College"],
-    languages: ["English", "Hindi", "Marathi"],
-    subjects: ["Calculus", "Linear Algebra", "Statistics", "Probability", "JEE Mathematics"],
-    availability: [
-      { day: "Monday", slots: ["10:00 AM", "2:00 PM", "6:00 PM"] },
-      { day: "Tuesday", slots: ["10:00 AM", "4:00 PM"] },
-      { day: "Wednesday", slots: ["2:00 PM", "6:00 PM", "8:00 PM"] },
-      { day: "Thursday", slots: ["10:00 AM", "2:00 PM"] },
-      { day: "Friday", slots: ["4:00 PM", "6:00 PM"] },
-    ],
-    totalStudents: 523,
-    totalSessions: 2150,
-    responseTime: "< 1 hour",
-  },
-  "2": {
-    id: 2,
-    name: "Rahul Verma",
-    subject: "Physics",
-    specialization: "JEE Main, NEET Physics",
-    rating: 4.8,
-    reviews: 189,
-    hourlyRate: 600,
-    experience: "5 years",
-    location: "Delhi, NCR",
-    avatar: "RV",
-    verified: true,
-    bio: "Physics enthusiast with experience in coaching JEE and NEET aspirants. I simplify complex concepts using real-world examples and animations.",
-    education: ["M.Tech Physics - IIT Delhi", "B.Tech - NIT Kurukshetra"],
-    languages: ["English", "Hindi"],
-    subjects: ["Mechanics", "Thermodynamics", "Optics", "Modern Physics", "JEE Physics"],
-    availability: [
-      { day: "Monday", slots: ["9:00 AM", "3:00 PM"] },
-      { day: "Wednesday", slots: ["11:00 AM", "5:00 PM"] },
-      { day: "Saturday", slots: ["10:00 AM", "2:00 PM", "6:00 PM"] },
-    ],
-    totalStudents: 312,
-    totalSessions: 1420,
-    responseTime: "< 2 hours",
-  },
-};
+  email: string;
+  qualifications: string[];
+  experience: number;
+}
 
 const reviews = [
   { id: 1, name: "Amit Sharma", rating: 5, date: "2 weeks ago", comment: "Excellent teaching methodology! My son's grades improved significantly." },
@@ -103,7 +39,31 @@ const reviews = [
 
 export default function TutorProfile() {
   const { id } = useParams();
-  const tutor = tutorData[id || "1"] || tutorData["1"];
+  const userId = localStorage.getItem("userId") || "";
+  const { data: profile, loading, error } = useApi<TutorProfile>(
+    `/profile/tutor/${userId}`
+  );
+
+  const { mutate: updateProfile, isLoading } = useMutation({
+    successMsg: "Profile updated successfully! ✅",
+    errorMsg: "Failed to update profile ❌",
+  });
+
+  const [formData, setFormData] = useState<TutorProfile>({
+    _id: profile?._id || "",
+    name: profile?.name || "",
+    email: profile?.email || "",
+    qualifications: profile?.qualifications || [],
+    experience: profile?.experience || 0,
+  });
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateProfile("PUT", `/profile/tutor/${userId}`, formData);
+  };
+
+  if (loading) return <div>Loading profile...</div>;
+  if (error) return <div className="text-red-500">Error: {error}</div>;
 
   return (
     <div className="min-h-screen bg-background">
@@ -117,41 +77,41 @@ export default function TutorProfile() {
               {/* Avatar */}
               <div className="relative">
                 <div className="flex h-28 w-28 items-center justify-center rounded-2xl gradient-primary text-3xl font-bold text-primary-foreground">
-                  {tutor.avatar}
+                  {profile.name.split(" ").map((n) => n[0]).join("")}
                 </div>
-                {tutor.verified && (
+                {/* {tutor.verified && (
                   <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-success text-success-foreground">
                     <CheckCircle className="h-5 w-5" />
                   </div>
-                )}
+                )} */}
               </div>
 
               {/* Info */}
               <div>
                 <div className="mb-2 flex items-center gap-3">
-                  <h1 className="text-2xl font-bold text-foreground lg:text-3xl">{tutor.name}</h1>
-                  {tutor.verified && (
+                  <h1 className="text-2xl font-bold text-foreground lg:text-3xl">{profile.name}</h1>
+                  {/* {tutor.verified && (
                     <span className="rounded-full bg-success/10 px-3 py-1 text-xs font-medium text-success">
                       Verified
                     </span>
-                  )}
+                  )} */}
                 </div>
-                <p className="mb-3 text-lg text-primary">{tutor.subject} Expert</p>
-                <p className="mb-4 text-muted-foreground">{tutor.specialization}</p>
+                <p className="mb-3 text-lg text-primary">{/* tutor.subject */}Expert</p>
+                <p className="mb-4 text-muted-foreground">{/* tutor.specialization */}</p>
 
                 <div className="flex flex-wrap gap-4 text-sm">
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Star className="h-4 w-4 fill-warning text-warning" />
-                    <span className="font-medium text-foreground">{tutor.rating}</span>
-                    <span>({tutor.reviews} reviews)</span>
+                    <span className="font-medium text-foreground">{/* tutor.rating */}4.9</span>
+                    <span>(234 reviews)</span>
                   </div>
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <MapPin className="h-4 w-4" />
-                    {tutor.location}
+                    {/* tutor.location */}Mumbai, Maharashtra
                   </div>
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Clock className="h-4 w-4" />
-                    {tutor.experience} experience
+                    {/* tutor.experience */}8 years
                   </div>
                 </div>
               </div>
@@ -185,16 +145,16 @@ export default function TutorProfile() {
             {/* About */}
             <div className="rounded-2xl border border-border bg-card p-6">
               <h2 className="mb-4 text-xl font-semibold text-foreground">About Me</h2>
-              <p className="text-muted-foreground leading-relaxed">{tutor.bio}</p>
+              <p className="text-muted-foreground leading-relaxed">{/* tutor.bio */}I am a passionate mathematics educator with a Ph.D. in Applied Mathematics from IIT Bombay. My teaching philosophy focuses on building strong fundamentals and developing problem-solving skills. I have helped over 500 students achieve their academic goals, including JEE and NEET preparations.</p>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               {[
-                { icon: Users, label: "Students", value: tutor.totalStudents },
-                { icon: Video, label: "Sessions", value: tutor.totalSessions },
-                { icon: Clock, label: "Response", value: tutor.responseTime },
-                { icon: Star, label: "Rating", value: tutor.rating },
+                { icon: Users, label: "Students", value: 523 },
+                { icon: Video, label: "Sessions", value: 2150 },
+                { icon: Clock, label: "Response", value: "< 1 hour" },
+                { icon: Star, label: "Rating", value: 4.9 },
               ].map((stat) => (
                 <div key={stat.label} className="rounded-xl border border-border bg-card p-4 text-center">
                   <stat.icon className="mx-auto mb-2 h-6 w-6 text-primary" />
@@ -211,7 +171,11 @@ export default function TutorProfile() {
                 Education
               </h2>
               <ul className="space-y-3">
-                {tutor.education.map((edu, index) => (
+                {[
+                  "Ph.D. Applied Mathematics - IIT Bombay",
+                  "M.Sc. Mathematics - Delhi University",
+                  "B.Sc. Mathematics - St. Stephen's College",
+                ].map((edu, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <div className="mt-1.5 h-2 w-2 rounded-full bg-primary" />
                     <span className="text-muted-foreground">{edu}</span>
@@ -227,7 +191,13 @@ export default function TutorProfile() {
                 Subjects I Teach
               </h2>
               <div className="flex flex-wrap gap-2">
-                {tutor.subjects.map((subject) => (
+                {[
+                  "Calculus",
+                  "Linear Algebra",
+                  "Statistics",
+                  "Probability",
+                  "JEE Mathematics",
+                ].map((subject) => (
                   <span key={subject} className="rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
                     {subject}
                   </span>
@@ -275,7 +245,7 @@ export default function TutorProfile() {
                 <div className="mb-4 text-center">
                   <div className="flex items-center justify-center text-3xl font-bold text-foreground">
                     <IndianRupee className="h-6 w-6" />
-                    {tutor.hourlyRate}
+                    {/* tutor.hourlyRate */}800
                     <span className="text-base font-normal text-muted-foreground">/hour</span>
                   </div>
                 </div>
@@ -292,7 +262,13 @@ export default function TutorProfile() {
               <div className="rounded-2xl border border-border bg-card p-6">
                 <h3 className="mb-4 font-semibold text-foreground">Availability</h3>
                 <div className="space-y-3">
-                  {tutor.availability.slice(0, 3).map((day) => (
+                  {[
+                    { day: "Monday", slots: ["10:00 AM", "2:00 PM", "6:00 PM"] },
+                    { day: "Tuesday", slots: ["10:00 AM", "4:00 PM"] },
+                    { day: "Wednesday", slots: ["2:00 PM", "6:00 PM", "8:00 PM"] },
+                    { day: "Thursday", slots: ["10:00 AM", "2:00 PM"] },
+                    { day: "Friday", slots: ["4:00 PM", "6:00 PM"] },
+                  ].slice(0, 3).map((day) => (
                     <div key={day.day}>
                       <div className="mb-2 text-sm font-medium text-foreground">{day.day}</div>
                       <div className="flex flex-wrap gap-2">
@@ -314,7 +290,7 @@ export default function TutorProfile() {
               <div className="rounded-2xl border border-border bg-card p-6">
                 <h3 className="mb-4 font-semibold text-foreground">Languages</h3>
                 <div className="flex flex-wrap gap-2">
-                  {tutor.languages.map((lang) => (
+                  {["English", "Hindi", "Marathi"].map((lang) => (
                     <span key={lang} className="rounded-full bg-muted px-3 py-1 text-sm text-muted-foreground">
                       {lang}
                     </span>

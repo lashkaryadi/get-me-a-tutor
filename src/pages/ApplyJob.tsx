@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { useApi } from "@/hooks/useApi";
+import { useMutation } from "@/hooks/useMutation";
+import apiClient  from "@/api/apiClient";
 import {
   ArrowLeft,
   MapPin,
@@ -20,103 +23,102 @@ import {
   Mail,
 } from "lucide-react";
 
-const jobData: Record<string, {
-  id: number;
+
+interface Job {
+  id: string;
   title: string;
-  institute: string;
+  description: string;
   location: string;
   salary: string;
   type: string;
-  description: string;
   requirements: string[];
-}> = {
-  "1": {
-    id: 1,
-    title: "Mathematics Tutor Needed",
-    institute: "ABC Academy",
-    location: "Mumbai, Maharashtra",
-    salary: "₹25,000 - ₹35,000/month",
-    type: "Full-time",
-    description: "We are looking for an experienced Mathematics tutor for Class 10-12 students. The ideal candidate should have strong knowledge in board and competitive exam preparation.",
-    requirements: ["B.Ed or equivalent", "Minimum 2 years experience", "Strong communication skills", "Knowledge of CBSE/ICSE curriculum"],
-  },
-  "2": {
-    id: 2,
-    title: "Physics Faculty",
-    institute: "XYZ Coaching",
-    location: "Delhi, NCR",
-    salary: "₹30,000 - ₹45,000/month",
-    type: "Part-time",
-    description: "Join our team as a Physics faculty for JEE and NEET preparation. Flexible hours and competitive pay.",
-    requirements: ["M.Sc Physics", "JEE/NEET coaching experience", "Ability to explain complex concepts"],
-  },
-  "3": {
-    id: 3,
-    title: "English Language Trainer",
-    institute: "Global Learning Center",
-    location: "Bangalore, Karnataka",
-    salary: "₹20,000 - ₹30,000/month",
-    type: "Full-time",
-    description: "Looking for an English language trainer for spoken English and IELTS preparation courses.",
-    requirements: ["Fluent in English", "IELTS certified preferred", "Experience in spoken English training"],
-  },
-};
+}
+
+interface ApplicationData {
+  jobId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  experience: string;
+  currentLocation: string;
+  expectedSalary: string;
+  resume: File | null;
+  coverLetter: string;
+}
 
 export default function ApplyJob() {
-  const { id } = useParams();
-  const job = jobData[id || "1"] || jobData["1"];
-  
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [formData, setFormData] = useState({
+  const { jobId } = useParams<{ jobId: string }>();
+  const navigate = useNavigate();
+
+  // Job details fetch करो
+  const { data: job, loading: jobLoading } = useApi<Job>(`/jobs/${jobId}`);
+
+  // Application submit करो
+  const { mutate: submitApplication, isLoading } = useMutation({
+    successMsg: "Application submitted successfully! ✅",
+    errorMsg: "Failed to submit application ❌",
+    onSuccess: () => {
+      setTimeout(() => {
+        navigate("/my-applications");
+      }, 1500);
+    },
+  });
+
+  const [formData, setFormData] = useState<ApplicationData>({
+    jobId: jobId || "",
     fullName: "",
     email: "",
     phone: "",
     experience: "",
     currentLocation: "",
     expectedSalary: "",
+    resume: null,
     coverLetter: "",
-    resume: null as File | null,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Application submitted:", formData);
-    setIsSubmitted(true);
-  };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData({ ...formData, resume: e.target.files[0] });
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData(prev => ({
+        ...prev,
+        resume: file
+      }));
     }
   };
 
-  if (isSubmitted) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="container mx-auto flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12">
-          <div className="w-full max-w-md text-center">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success/10">
-              <CheckCircle className="h-10 w-10 text-success" />
-            </div>
-            <h1 className="mb-2 text-2xl font-bold text-foreground">Application Submitted!</h1>
-            <p className="mb-8 text-muted-foreground">
-              Your application for <span className="font-medium text-foreground">{job.title}</span> at {job.institute} has been submitted successfully.
-            </p>
-            <div className="space-y-4">
-              <Button asChild size="lg" className="w-full">
-                <Link to="/track-application">Track Application</Link>
-              </Button>
-              <Button variant="outline" asChild size="lg" className="w-full">
-                <Link to="/feed">Browse More Jobs</Link>
-              </Button>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitApplication("POST", "/applications", formData);
+  };
+
+  const handleApplyJob = async () => {
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('jobId', formData.jobId);
+      formDataToSend.append('fullName', formData.fullName);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('experience', formData.experience);
+      formDataToSend.append('currentLocation', formData.currentLocation);
+      formDataToSend.append('expectedSalary', formData.expectedSalary);
+      if (formData.resume) {
+        formDataToSend.append('resume', formData.resume);
+      }
+
+      const response = await fetch('/api/applications', {
+        method: 'POST',
+        body: formDataToSend
+      });
+
+      if (response.ok) {
+        // Handle success
+        console.log('Application submitted successfully');
+      }
+    } catch (error) {
+      console.error('Error submitting application:', error);
+    }
+  };
+
+  if (jobLoading) return <div>Loading job details...</div>;
 
   return (
     <div className="min-h-screen bg-background">
@@ -140,7 +142,6 @@ export default function ApplyJob() {
                   <Building2 className="h-7 w-7 text-primary-foreground" />
                 </div>
                 <h2 className="mb-2 text-xl font-bold text-foreground">{job.title}</h2>
-                <p className="mb-4 text-primary">{job.institute}</p>
 
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
@@ -310,7 +311,7 @@ export default function ApplyJob() {
                     </div>
                   </div>
 
-                  <Button type="submit" size="lg" className="w-full">
+                  <Button type="submit" size="lg" className="w-full" onClick={handleApplyJob}>
                     <CheckCircle className="h-5 w-5" />
                     Submit Application
                   </Button>

@@ -1,22 +1,63 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { GraduationCap, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { useMutation } from "@/hooks/useMutation";
+
+interface LoginData {
+  email: string;
+  password: string;
+}
+
+interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: {
+    _id: string;
+    email: string;
+    name: string;
+    role: "student" | "tutor" | "parent" | "institute";
+  };
+}
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<LoginData>({
     email: "",
     password: "",
   });
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Mutation hook use करो
+  const { mutate, isLoading } = useMutation({
+    successMsg: "Login successful! ✅",
+    errorMsg: "Invalid email or password ❌",
+    onSuccess: (data: LoginResponse) => {
+      // Tokens save करो
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // Role के हिसाब से redirect करो
+      setTimeout(() => {
+        if (data.user.role === "institute") {
+          navigate("/institute-dashboard");
+        } else if (data.user.role === "tutor") {
+          navigate("/tutor-profile");
+        } else {
+          navigate("/feed");
+        }
+      }, 1000);
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login data:", formData);
+    await mutate("POST", "/auth/login", formData);
   };
 
   return (
@@ -90,8 +131,8 @@ export default function Login() {
                 </div>
               </div>
 
-              <Button type="submit" size="lg" className="w-full">
-                Sign In
+              <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
+                {isLoading ? "Logging in..." : "Sign In"}
                 <ArrowRight className="h-5 w-5" />
               </Button>
             </form>

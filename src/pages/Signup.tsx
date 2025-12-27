@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useMutation } from "@/hooks/useMutation";
 
+
 interface SignupData {
   name: string;
   email: string;
@@ -75,7 +76,7 @@ export default function Signup() {
     email: "",
     phone: "",
     password: "",
-    role: "student",
+    role: "" as SignupData["role"],
   });
 
   const navigate = useNavigate();
@@ -96,9 +97,28 @@ export default function Signup() {
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await mutate("POST", "/auth/signup", formData);
-  };
+  e.preventDefault();
+
+  if (
+    !formData.name ||
+    !formData.email ||
+    !formData.phone ||
+    !formData.password ||
+    !formData.role
+  ) {
+    alert("All fields including role are required");
+    return;
+  }
+
+  await mutate("POST", "/auth/signup", {
+    name: formData.name.trim(),
+    email: formData.email.trim().toLowerCase(),
+    phone: formData.phone.trim(),
+    password: formData.password,
+    role: formData.role,
+  });
+};
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -124,41 +144,57 @@ export default function Signup() {
                   I want to join as
                 </Label>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {roles.map((role) => (
-                    <button
-                      key={role.id}
-                      type="button"
-                      onClick={() => setSelectedRole(role.id)}
-                      className={`group relative flex flex-col items-center gap-3 rounded-xl border-2 p-6 text-center transition-all ${
-                        selectedRole === role.id
-                          ? "border-primary bg-primary/5 shadow-lg"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      {selectedRole === role.id && (
-                        <div className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary">
-                          <CheckCircle className="h-4 w-4 text-primary-foreground" />
-                        </div>
-                      )}
-                      <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-xl ${
-                          selectedRole === role.id
-                            ? "gradient-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                        }`}
+                  {roles.map((role) => {
+                    const Icon = role.icon;
+
+                    return (
+                      <button
+                        key={role.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedRole(role.id);
+                          setFormData((prev) => ({
+                            ...prev,
+                            role: role.id, // 🔥 THIS IS CRITICAL
+                          }));
+                        }}
+                        className={`group relative flex flex-col items-center gap-3 rounded-xl border-2 p-6 text-center transition-all
+        ${
+          selectedRole === role.id
+            ? "border-primary bg-primary/5 shadow-lg"
+            : "border-border hover:border-primary/50"
+        }
+      `}
                       >
-                        <role.icon className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-foreground">
-                          {role.title}
+                        {selectedRole === role.id && (
+                          <div className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary">
+                            <CheckCircle className="h-4 w-4 text-primary-foreground" />
+                          </div>
+                        )}
+
+                        <div
+                          className={`flex h-12 w-12 items-center justify-center rounded-xl
+          ${
+            selectedRole === role.id
+              ? "gradient-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+          }
+        `}
+                        >
+                          <Icon className="h-6 w-6" />
                         </div>
-                        <div className="mt-1 text-xs text-muted-foreground">
-                          {role.description}
+
+                        <div>
+                          <div className="font-semibold text-foreground">
+                            {role.title}
+                          </div>
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            {role.description}
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

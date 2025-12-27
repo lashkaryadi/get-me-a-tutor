@@ -134,53 +134,60 @@ interface Job {
 }
 
 export default function Feed() {
-  const { data: jobsData, loading, error } = useApi<Job[]>("/jobs");
+  const { data: jobs, loading, error } = useApi<Job[]>("/jobs");
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"tutors" | "jobs">("tutors");
   const [selectedSubject, setSelectedSubject] = useState("All Subjects");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [jobs, setJobs] = useState<Job[]>([]); // ADD the useState hook for jobs
   const [hasShownError, setHasShownError] = useState(false);
 
-  // ADD this function to fetch jobs
-  const fetchJobs = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/jobs");
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setJobs(data);
-    } catch (error) {
-      console.error("Error fetching jobs:", error);
-      // Only show toast ONCE, not during render
-      if (!hasShownError) {
-        toast({
-          title: "Error",
-          description: "Failed to load jobs. Please try again.",
-          variant: "destructive",
-        });
-        setHasShownError(true);
-      }
-    }
-  };
-
-  // Call fetchJobs in useEffect
   useEffect(() => {
-    fetchJobs();
-  }, [hasShownError]);
+    if (error) {
+      toast({
+        title: "Error ❌",
+        description: error,
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Something went wrong</div>;
+  // // ADD this function to fetch jobs
+  // const fetchJobs = async () => {
+  //   try {
+  //     const response = await apiClient.get('/jobs');
+  //     setJobs(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching jobs:", error);
+  //     // Only show toast ONCE, not during render
+  //     if (!hasShownError) {
+  //       toast({
+  //         title: "Error",
+  //         description: "Failed to load jobs. Please try again.",
+  //         variant: "destructive",
+  //       });
+  //       setHasShownError(true);
+  //     }
+  //   }
+  // };
+
+  // // Call fetchJobs in useEffect
+  // useEffect(() => {
+  //   fetchJobs();
+  // }, [hasShownError]);
 
   if (loading) return <div>Loading jobs...</div>;
 
-  if (error) {
-    toast({
-      title: "Error ❌",
-      description: error,
-      variant: "destructive",
-    });
-    return <div>Failed to load jobs</div>;
-  }
+  // if (error) {
+  //   toast({
+  //     title: "Error ❌",
+  //     description: error,
+  //     variant: "destructive",
+  //   });
+  //   return <div>Failed to load jobs</div>;
+  // }
 
   return (
     <div className="min-h-screen bg-background">
@@ -333,9 +340,9 @@ export default function Feed() {
                     </div>
                   </div>
                   <button
+                    aria-label="Add to favourites"
                     onClick={(e) => {
                       e.preventDefault();
-                      // Handle favorite
                     }}
                     className="text-muted-foreground hover:text-destructive"
                   >

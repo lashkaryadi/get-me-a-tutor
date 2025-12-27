@@ -20,11 +20,17 @@ export function useApi<T>(endpoint: string): UseApiState<T> {
         setState({ data: null, loading: true, error: null });
         const response = await apiClient.get(endpoint);
         setState({ data: response.data, loading: false, error: null });
-      } catch (error: any) {
+      } catch (error: unknown) {
+        let message = "Failed to fetch data";
+
+        if (error instanceof Error) {
+          message = error.message;
+        }
+
         setState({
           data: null,
           loading: false,
-          error: error.response?.data?.message || "Failed to fetch data",
+          error: message,
         });
       }
     };

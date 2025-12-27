@@ -41,7 +41,7 @@ export default function TutorProfile() {
   const { id } = useParams();
   const userId = localStorage.getItem("userId") || "";
   const { data: profile, loading, error } = useApi<TutorProfile>(
-    `/profile/tutor/${userId}`
+    `/profile/teacher/${userId}`
   );
 
   const { mutate: updateProfile, isLoading } = useMutation({
@@ -59,8 +59,8 @@ export default function TutorProfile() {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateProfile("PUT", `/profile/tutor/${userId}`, formData);
-  };
+    await updateProfile("PUT", `/profile/teacher/${userId}`, formData);
+  }; 
 
   if (loading) return <div>Loading profile...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;

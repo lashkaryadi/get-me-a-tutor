@@ -7,6 +7,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { GraduationCap, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useMutation } from "@/hooks/useMutation";
+import axios from "axios";
 
 interface LoginData {
   email: string;
@@ -42,12 +43,13 @@ export default function Login() {
       localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      // Role के हिसाब से redirect करो
       setTimeout(() => {
         if (data.user.role === "institute") {
-          navigate("/institute-dashboard");
+          navigate("/InstituteDashboard");
+        } else if (data.user.role === "student") {
+          navigate("/StudentDashboard");
         } else if (data.user.role === "tutor") {
-          navigate("/tutor-profile");
+          navigate("/TutorProfile");
         } else {
           navigate("/feed");
         }
@@ -57,7 +59,11 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await mutate("POST", "/auth/login", formData);
+
+    await mutate("POST", "/auth/login", {
+      identifier: formData.email, // 🔥 backend expects identifier
+      password: formData.password,
+    });
   };
 
   return (
@@ -131,7 +137,12 @@ export default function Login() {
                 </div>
               </div>
 
-              <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full"
+                disabled={isLoading}
+              >
                 {isLoading ? "Logging in..." : "Sign In"}
                 <ArrowRight className="h-5 w-5" />
               </Button>
@@ -140,7 +151,9 @@ export default function Login() {
             {/* Divider */}
             <div className="my-6 flex items-center gap-4">
               <div className="h-px flex-1 bg-border" />
-              <span className="text-sm text-muted-foreground">or continue with</span>
+              <span className="text-sm text-muted-foreground">
+                or continue with
+              </span>
               <div className="h-px flex-1 bg-border" />
             </div>
 
@@ -168,7 +181,11 @@ export default function Login() {
                 Google
               </Button>
               <Button variant="outline" className="w-full">
-                <svg className="mr-2 h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="mr-2 h-5 w-5"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                 </svg>
                 Facebook
@@ -177,7 +194,10 @@ export default function Login() {
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/signup" className="font-semibold text-primary hover:underline">
+              <Link
+                to="/signup"
+                className="font-semibold text-primary hover:underline"
+              >
                 Sign up
               </Link>
             </p>

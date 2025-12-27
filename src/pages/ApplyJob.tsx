@@ -88,8 +88,8 @@ export default function ApplyJob() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await submitApplication("POST", "/applications", formData);
-  };
+    await submitApplication("POST", "/applications/apply", formData);
+  }; 
 
   const handleApplyJob = async () => {
     try {
@@ -104,12 +104,11 @@ export default function ApplyJob() {
         formDataToSend.append('resume', formData.resume);
       }
 
-      const response = await fetch('/api/applications', {
-        method: 'POST',
-        body: formDataToSend
+      const response = await apiClient.post('/applications/apply', formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      if (response.ok) {
+      if (response?.status === 200 || response?.status === 201) {
         // Handle success
         console.log('Application submitted successfully');
       }

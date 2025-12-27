@@ -23,44 +23,86 @@ import {
 import { useApi } from "@/hooks/useApi";
 import { useMutation } from "@/hooks/useMutation";
 
-interface TutorProfile {
-  _id: string;
-  name: string;
-  email: string;
-  qualifications: string[];
-  experience: number;
+interface TutorProfileResponse {
+  profile: {
+    _id: string;
+    userId: string;
+    bio?: string;
+    experienceYears?: number;
+    subjects?: string[];
+    city?: string;
+  };
+  owner: {
+    name: string;
+    email: string;
+    phone?: string;
+    role: string;
+  };
 }
 
 const reviews = [
-  { id: 1, name: "Amit Sharma", rating: 5, date: "2 weeks ago", comment: "Excellent teaching methodology! My son's grades improved significantly." },
-  { id: 2, name: "Sneha Gupta", rating: 5, date: "1 month ago", comment: "Very patient and explains concepts clearly. Highly recommended!" },
-  { id: 3, name: "Rajesh Kumar", rating: 4, date: "1 month ago", comment: "Good tutor, helped me prepare for my board exams effectively." },
+  {
+    id: 1,
+    name: "Amit Sharma",
+    rating: 5,
+    date: "2 weeks ago",
+    comment:
+      "Excellent teaching methodology! My son's grades improved significantly.",
+  },
+  {
+    id: 2,
+    name: "Sneha Gupta",
+    rating: 5,
+    date: "1 month ago",
+    comment: "Very patient and explains concepts clearly. Highly recommended!",
+  },
+  {
+    id: 3,
+    name: "Rajesh Kumar",
+    rating: 4,
+    date: "1 month ago",
+    comment: "Good tutor, helped me prepare for my board exams effectively.",
+  },
 ];
 
 export default function TutorProfile() {
-  const { id } = useParams();
-  const userId = localStorage.getItem("userId") || "";
-  const { data: profile, loading, error } = useApi<TutorProfile>(
-    `/profile/teacher/${userId}`
-  );
+  const { id } = useParams<{ id: string }>();
+  const {
+  data,
+  loading,
+  error,
+} = useApi<TutorProfileResponse>(id ? `/profile/teacher/${id}` : "");
+
+const profile = data?.profile;
+const owner = data?.owner;
+
 
   const { mutate: updateProfile, isLoading } = useMutation({
     successMsg: "Profile updated successfully! ✅",
     errorMsg: "Failed to update profile ❌",
   });
 
-  const [formData, setFormData] = useState<TutorProfile>({
-    _id: profile?._id || "",
-    name: profile?.name || "",
-    email: profile?.email || "",
-    qualifications: profile?.qualifications || [],
-    experience: profile?.experience || 0,
-  });
+  // const [formData, setFormData] = useState<TutorProfileResponse>({
+  //   profile: {
+  //     _id: profile?.profile._id || "",
+  //     userId: profile?.profile.userId || "",
+  //     bio: profile?.profile.bio || "",
+  //     experienceYears: profile?.profile.experienceYears || 0,
+  //     subjects: profile?.profile.subjects || [],
+  //     city: profile?.profile.city || "",
+  //   },
+  //   owner: {
+  //     name: profile?.owner.name || "",
+  //     email: profile?.owner.email || "",
+  //     phone: profile?.owner.phone || "",
+  //     role: profile?.owner.role || "",
+  //   },
+  // });
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await updateProfile("PUT", `/profile/teacher/${userId}`, formData);
-  }; 
+  // const handleUpdate = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   await updateProfile("PUT", `/profile/teacher/${id}`, formData);
+  // };
 
   if (loading) return <div>Loading profile...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
@@ -77,7 +119,10 @@ export default function TutorProfile() {
               {/* Avatar */}
               <div className="relative">
                 <div className="flex h-28 w-28 items-center justify-center rounded-2xl gradient-primary text-3xl font-bold text-primary-foreground">
-                  {profile.name.split(" ").map((n) => n[0]).join("")}
+                  {owner?.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")}
                 </div>
                 {/* {tutor.verified && (
                   <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-success text-success-foreground">
@@ -89,20 +134,28 @@ export default function TutorProfile() {
               {/* Info */}
               <div>
                 <div className="mb-2 flex items-center gap-3">
-                  <h1 className="text-2xl font-bold text-foreground lg:text-3xl">{profile.name}</h1>
+                  <h1 className="text-2xl font-bold text-foreground lg:text-3xl">
+                    {owner?.name}
+                  </h1>
                   {/* {tutor.verified && (
                     <span className="rounded-full bg-success/10 px-3 py-1 text-xs font-medium text-success">
                       Verified
                     </span>
                   )} */}
                 </div>
-                <p className="mb-3 text-lg text-primary">{/* tutor.subject */}Expert</p>
-                <p className="mb-4 text-muted-foreground">{/* tutor.specialization */}</p>
+                <p className="mb-3 text-lg text-primary">
+                  {/* tutor.subject */}Expert
+                </p>
+                <p className="mb-4 text-muted-foreground">
+                  {/* tutor.specialization */}
+                </p>
 
                 <div className="flex flex-wrap gap-4 text-sm">
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Star className="h-4 w-4 fill-warning text-warning" />
-                    <span className="font-medium text-foreground">{/* tutor.rating */}4.9</span>
+                    <span className="font-medium text-foreground">
+                      {/* tutor.rating */}4.9
+                    </span>
                     <span>(234 reviews)</span>
                   </div>
                   <div className="flex items-center gap-1 text-muted-foreground">
@@ -144,8 +197,17 @@ export default function TutorProfile() {
           <div className="lg:col-span-2 space-y-8">
             {/* About */}
             <div className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="mb-4 text-xl font-semibold text-foreground">About Me</h2>
-              <p className="text-muted-foreground leading-relaxed">{/* tutor.bio */}I am a passionate mathematics educator with a Ph.D. in Applied Mathematics from IIT Bombay. My teaching philosophy focuses on building strong fundamentals and developing problem-solving skills. I have helped over 500 students achieve their academic goals, including JEE and NEET preparations.</p>
+              <h2 className="mb-4 text-xl font-semibold text-foreground">
+                About Me
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                {/* tutor.bio */}I am a passionate mathematics educator with a
+                Ph.D. in Applied Mathematics from IIT Bombay. My teaching
+                philosophy focuses on building strong fundamentals and
+                developing problem-solving skills. I have helped over 500
+                students achieve their academic goals, including JEE and NEET
+                preparations.
+              </p>
             </div>
 
             {/* Stats */}
@@ -156,10 +218,17 @@ export default function TutorProfile() {
                 { icon: Clock, label: "Response", value: "< 1 hour" },
                 { icon: Star, label: "Rating", value: 4.9 },
               ].map((stat) => (
-                <div key={stat.label} className="rounded-xl border border-border bg-card p-4 text-center">
+                <div
+                  key={stat.label}
+                  className="rounded-xl border border-border bg-card p-4 text-center"
+                >
                   <stat.icon className="mx-auto mb-2 h-6 w-6 text-primary" />
-                  <div className="text-xl font-bold text-foreground">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  <div className="text-xl font-bold text-foreground">
+                    {stat.value}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {stat.label}
+                  </div>
                 </div>
               ))}
             </div>
@@ -198,7 +267,10 @@ export default function TutorProfile() {
                   "Probability",
                   "JEE Mathematics",
                 ].map((subject) => (
-                  <span key={subject} className="rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+                  <span
+                    key={subject}
+                    className="rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary"
+                  >
                     {subject}
                   </span>
                 ))}
@@ -213,20 +285,33 @@ export default function TutorProfile() {
               </h2>
               <div className="space-y-4">
                 {reviews.map((review) => (
-                  <div key={review.id} className="border-b border-border pb-4 last:border-0 last:pb-0">
+                  <div
+                    key={review.id}
+                    className="border-b border-border pb-4 last:border-0 last:pb-0"
+                  >
                     <div className="mb-2 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
-                          {review.name.split(" ").map((n) => n[0]).join("")}
+                          {review.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
                         </div>
                         <div>
-                          <div className="font-medium text-foreground">{review.name}</div>
-                          <div className="text-xs text-muted-foreground">{review.date}</div>
+                          <div className="font-medium text-foreground">
+                            {review.name}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {review.date}
+                          </div>
                         </div>
                       </div>
                       <div className="flex gap-0.5">
                         {[...Array(review.rating)].map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-warning text-warning" />
+                          <Star
+                            key={i}
+                            className="h-4 w-4 fill-warning text-warning"
+                          />
                         ))}
                       </div>
                     </div>
@@ -246,7 +331,9 @@ export default function TutorProfile() {
                   <div className="flex items-center justify-center text-3xl font-bold text-foreground">
                     <IndianRupee className="h-6 w-6" />
                     {/* tutor.hourlyRate */}800
-                    <span className="text-base font-normal text-muted-foreground">/hour</span>
+                    <span className="text-base font-normal text-muted-foreground">
+                      /hour
+                    </span>
                   </div>
                 </div>
                 <Button className="w-full" size="lg">
@@ -260,26 +347,41 @@ export default function TutorProfile() {
 
               {/* Availability */}
               <div className="rounded-2xl border border-border bg-card p-6">
-                <h3 className="mb-4 font-semibold text-foreground">Availability</h3>
+                <h3 className="mb-4 font-semibold text-foreground">
+                  Availability
+                </h3>
                 <div className="space-y-3">
                   {[
-                    { day: "Monday", slots: ["10:00 AM", "2:00 PM", "6:00 PM"] },
+                    {
+                      day: "Monday",
+                      slots: ["10:00 AM", "2:00 PM", "6:00 PM"],
+                    },
                     { day: "Tuesday", slots: ["10:00 AM", "4:00 PM"] },
-                    { day: "Wednesday", slots: ["2:00 PM", "6:00 PM", "8:00 PM"] },
+                    {
+                      day: "Wednesday",
+                      slots: ["2:00 PM", "6:00 PM", "8:00 PM"],
+                    },
                     { day: "Thursday", slots: ["10:00 AM", "2:00 PM"] },
                     { day: "Friday", slots: ["4:00 PM", "6:00 PM"] },
-                  ].slice(0, 3).map((day) => (
-                    <div key={day.day}>
-                      <div className="mb-2 text-sm font-medium text-foreground">{day.day}</div>
-                      <div className="flex flex-wrap gap-2">
-                        {day.slots.map((slot) => (
-                          <span key={slot} className="rounded-lg border border-border bg-muted px-3 py-1 text-xs text-muted-foreground">
-                            {slot}
-                          </span>
-                        ))}
+                  ]
+                    .slice(0, 3)
+                    .map((day) => (
+                      <div key={day.day}>
+                        <div className="mb-2 text-sm font-medium text-foreground">
+                          {day.day}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {day.slots.map((slot) => (
+                            <span
+                              key={slot}
+                              className="rounded-lg border border-border bg-muted px-3 py-1 text-xs text-muted-foreground"
+                            >
+                              {slot}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
                 <Button variant="outline" className="mt-4 w-full">
                   View Full Schedule
@@ -288,10 +390,15 @@ export default function TutorProfile() {
 
               {/* Languages */}
               <div className="rounded-2xl border border-border bg-card p-6">
-                <h3 className="mb-4 font-semibold text-foreground">Languages</h3>
+                <h3 className="mb-4 font-semibold text-foreground">
+                  Languages
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {["English", "Hindi", "Marathi"].map((lang) => (
-                    <span key={lang} className="rounded-full bg-muted px-3 py-1 text-sm text-muted-foreground">
+                    <span
+                      key={lang}
+                      className="rounded-full bg-muted px-3 py-1 text-sm text-muted-foreground"
+                    >
                       {lang}
                     </span>
                   ))}

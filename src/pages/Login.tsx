@@ -18,7 +18,7 @@ interface LoginResponse {
   accessToken: string;
   refreshToken: string;
   user: {
-    _id: string;
+    id: string;
     email: string;
     name: string;
     role: "student" | "tutor" | "parent" | "institute";
@@ -42,18 +42,19 @@ export default function Login() {
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("userId", data.user.id);
 
       setTimeout(() => {
         if (data.user.role === "institute") {
-          navigate("/InstituteDashboard");
+          navigate("/institute/dashboard");
         } else if (data.user.role === "student") {
-          navigate("/StudentDashboard");
+          navigate("/student/dashboard");
         } else if (data.user.role === "tutor") {
-          navigate("/TutorProfile");
+          navigate(`/tutor/${data.user.id}`);
         } else {
           navigate("/feed");
         }
-      }, 1000);
+      }, 500);
     },
   });
 

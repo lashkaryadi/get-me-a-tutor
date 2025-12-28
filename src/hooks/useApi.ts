@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
 import apiClient from "@/api/apiClient";
+import { useState, useEffect } from "react";
+
 
 interface UseApiState<T> {
   data: T | null;
@@ -19,6 +20,8 @@ export function useApi<T>(endpoint: string): UseApiState<T> {
       try {
         setState({ data: null, loading: true, error: null });
         const response = await apiClient.get(endpoint);
+        console.log("API RESPONSE:", response.data);
+
         setState({ data: response.data, loading: false, error: null });
       } catch (error: unknown) {
         let message = "Failed to fetch data";
@@ -40,3 +43,4 @@ export function useApi<T>(endpoint: string): UseApiState<T> {
 
   return state;
 }
+

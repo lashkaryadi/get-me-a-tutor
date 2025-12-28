@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -121,20 +122,28 @@ const tutors = [
 ];
 
 interface Job {
-  id: string; // ADD THIS
+  _id: string;
   title: string;
   description: string;
   location: string;
-  salary: string;
-  type: string; // ADD THIS
-  requirements: string[];
-  urgent: boolean; // ADD THIS
-  institute: string; // ADD THIS
-  posted: string; // ADD THIS (date/time string)
+  salary?: number;
+  jobType: string;
+  createdAt: string;
+  institution: {
+    institutionName: string;
+    city?: string;
+  };
+}
+interface JobsResponse {
+  success: boolean;
+  results: number;
+  jobs: Job[];
 }
 
 export default function Feed() {
-  const { data: jobs, loading, error } = useApi<Job[]>("/jobs");
+  const { data, loading, error } = useApi<JobsResponse>("/jobs");
+  const jobs = Array.isArray(data?.jobs) ? data.jobs : [];
+
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"tutors" | "jobs">("tutors");
   const [selectedSubject, setSelectedSubject] = useState("All Subjects");
@@ -389,53 +398,49 @@ export default function Feed() {
           </div>
         ) : (
           <div className="space-y-4">
-            {jobs?.map((job) => (
-              <div
-                key={job.id}
-                className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 transition-all hover:border-primary hover:shadow-lg sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="flex-1">
-                  <div className="mb-2 flex items-center gap-3">
-                    <h3>
-                      <Link
-                        to={`/apply/${job.id}`}
-                        className="font-semibold text-foreground group-hover:text-primary"
-                      >
-                        {job.title}
-                      </Link>
+            {jobs.length === 0 ? (
+              <p className="text-muted-foreground">No jobs available</p>
+            ) : (
+              jobs.map((job) => (
+                <div
+                  key={job._id}
+                  className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 hover:border-primary hover:shadow-lg"
+                >
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {job.title}
                     </h3>
-                    {job.urgent && (
-                      <span className="rounded-full bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive">
-                        Urgent
+
+                    <p className="text-sm text-muted-foreground">
+                      {job.institution?.institutionName}
+                    </p>
+
+                    <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        {job.location}
                       </span>
-                    )}
-                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                      {job.type}
-                    </span>
+
+                      {job.salary && (
+                        <span className="flex items-center gap-1">
+                          <IndianRupee className="h-4 w-4" />
+                          {job.salary}
+                        </span>
+                      )}
+
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {new Date(job.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
-                  <p className="mb-2 text-sm text-muted-foreground">
-                    {job.institute}
-                  </p>
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {job.location}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <IndianRupee className="h-4 w-4" />
-                      {job.salary}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {job.posted}
-                    </span>
-                  </div>
+
+                  <Button asChild>
+                    <Link to={`/apply/${job._id}`}>Apply Now</Link>
+                  </Button>
                 </div>
-                <Button asChild>
-                  <Link to={`/apply/${job.id}`}>Apply Now</Link>
-                </Button>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         )}
       </main>
@@ -444,3 +449,4 @@ export default function Feed() {
     </div>
   );
 }
+

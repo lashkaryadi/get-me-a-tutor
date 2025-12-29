@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { Pencil } from "lucide-react";
 import {
   Star,
   MapPin,
@@ -66,16 +67,33 @@ const reviews = [
 ];
 
 export default function TutorProfile() {
-  const { id } = useParams<{ id: string }>();
-  const {
-  data,
-  loading,
-  error,
-} = useApi<TutorProfileResponse>(id ? `/profile/teacher/${id}` : "");
+  const { id } = useParams();
 
-const profile = data?.profile;
-const owner = data?.owner;
+  const { data, loading, error } = useApi<{
+    success: boolean;
+    profile: any;
+  }>(`/profile/teacher/profile/${id}`);
 
+  const profile = {
+    name: data?.profile?.userId?.name || "Expert",
+    bio:
+      data?.profile?.bio ||
+      "Experienced educator with a passion for teaching and mentoring students.",
+    experienceYears: data?.profile?.experienceYears || 5,
+    city: data?.profile?.city || "India",
+    subjects: data?.profile?.subjects || ["Mathematics"],
+    expectedSalary: data?.profile?.expectedSalary?.min || 500,
+
+    // ---- dummy / future fields ----
+    rating: 4.9,
+    reviews: 234,
+    students: 523,
+    sessions: 2150,
+    responseTime: "< 1 hour",
+    education: ["M.Sc Mathematics – Delhi University", "B.Ed – IGNOU"],
+  };
+
+  // const owner = data?.owner;
 
   const { mutate: updateProfile, isLoading } = useMutation({
     successMsg: "Profile updated successfully! ✅",
@@ -119,7 +137,7 @@ const owner = data?.owner;
               {/* Avatar */}
               <div className="relative">
                 <div className="flex h-28 w-28 items-center justify-center rounded-2xl gradient-primary text-3xl font-bold text-primary-foreground">
-                  {owner?.name
+                  {profile.name
                     .split(" ")
                     .map((n) => n[0])
                     .join("")}
@@ -135,7 +153,7 @@ const owner = data?.owner;
               <div>
                 <div className="mb-2 flex items-center gap-3">
                   <h1 className="text-2xl font-bold text-foreground lg:text-3xl">
-                    {owner?.name}
+                    {profile.name}
                   </h1>
                   {/* {tutor.verified && (
                     <span className="rounded-full bg-success/10 px-3 py-1 text-xs font-medium text-success">
@@ -143,12 +161,8 @@ const owner = data?.owner;
                     </span>
                   )} */}
                 </div>
-                <p className="mb-3 text-lg text-primary">
-                  {/* tutor.subject */}Expert
-                </p>
-                <p className="mb-4 text-muted-foreground">
-                  {/* tutor.specialization */}
-                </p>
+                <p className="mb-3 text-lg text-primary">{profile.subjects}</p>
+                <p className="mb-4 text-muted-foreground">{profile.bio}</p>
 
                 <div className="flex flex-wrap gap-4 text-sm">
                   <div className="flex items-center gap-1 text-muted-foreground">
@@ -160,14 +174,23 @@ const owner = data?.owner;
                   </div>
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <MapPin className="h-4 w-4" />
-                    {/* tutor.location */}Mumbai, Maharashtra
+                    {profile.city}
                   </div>
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Clock className="h-4 w-4" />
-                    {/* tutor.experience */}8 years
+                    {profile.experienceYears} years
                   </div>
                 </div>
               </div>
+              <Button variant="outline" size="icon">
+                <Link
+                  to="/complete-profile"
+                  
+                  //className="flex items-center gap-2 rounded-xl border border-primary px-4 py-2 text-sm text-muted-foreground transition hover:border-primary hover:text-primary"
+                >
+                  <Pencil className="h-5 w-5 " />  
+                </Link>
+              </Button>
             </div>
 
             {/* Actions */}
@@ -201,12 +224,13 @@ const owner = data?.owner;
                 About Me
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                {/* tutor.bio */}I am a passionate mathematics educator with a
+                {profile.bio}
+                {/* I am a passionate mathematics educator with a
                 Ph.D. in Applied Mathematics from IIT Bombay. My teaching
                 philosophy focuses on building strong fundamentals and
                 developing problem-solving skills. I have helped over 500
                 students achieve their academic goals, including JEE and NEET
-                preparations.
+                preparations. */}
               </p>
             </div>
 
@@ -252,8 +276,10 @@ const owner = data?.owner;
                 ))}
               </ul>
             </div>
-
-            {/* Subjects */}
+            {/* 
+            {profile.subjects.map((sub: string) => (
+              <span key={sub}>{sub}</span>
+            ))} */}
             <div className="rounded-2xl border border-border bg-card p-6">
               <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-foreground">
                 <BookOpen className="h-5 w-5 text-primary" />
@@ -330,7 +356,7 @@ const owner = data?.owner;
                 <div className="mb-4 text-center">
                   <div className="flex items-center justify-center text-3xl font-bold text-foreground">
                     <IndianRupee className="h-6 w-6" />
-                    {/* tutor.hourlyRate */}800
+                    {profile.expectedSalary}
                     <span className="text-base font-normal text-muted-foreground">
                       /hour
                     </span>

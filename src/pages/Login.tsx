@@ -7,7 +7,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { GraduationCap, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useMutation } from "@/hooks/useMutation";
-import axios from "axios";
+import apiClient from "@/api/apiClient";
 
 interface LoginData {
   email: string;
@@ -37,24 +37,52 @@ export default function Login() {
   const { mutate, isLoading } = useMutation({
     successMsg: "Login successful! ✅",
     errorMsg: "Invalid email or password ❌",
-    onSuccess: (data: LoginResponse) => {
+    onSuccess: async (data: LoginResponse) => {
       // Tokens save करो
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("userId", data.user.id);
 
-      setTimeout(() => {
-        if (data.user.role === "institute") {
-          navigate("/institute/dashboard");
-        } else if (data.user.role === "student") {
-          navigate("/student/dashboard");
-        } else if (data.user.role === "tutor") {
-          navigate(`/tutor/${data.user.id}`);
+      if (data.user.role === "tutor") {
+        const profileRes = await apiClient.get(
+          `/profile/teacher/${data.user.id}`
+        );
+        if (!profileRes.data.profile.isComplete) {
+          navigate("/complete-profile");
         } else {
           navigate("/feed");
         }
-      }, 500);
+      }
+
+      navigate("/feed");
+      if (data.user.role === "institute") {
+        navigate("/institute/dashboard");
+      } else if (data.user.role === "student") {
+        navigate("/student/dashboard");
+      }
+
+      // else if (data.user.role === "tutor") {
+      //   navigate(`/tutor/${data.user.id}`);
+      // }
+      else {
+        navigate("/feed");
+      }
+
+      // setTimeout(() => {
+      // if (data.user.role === "institute") {
+      //   navigate("/institute/dashboard");
+      // } else if (data.user.role === "student") {
+      //   navigate("/student/dashboard");
+      // }
+
+      // // else if (data.user.role === "tutor") {
+      // //   navigate(`/tutor/${data.user.id}`);
+      // // }
+      // else {
+      //   navigate("/feed");
+      // }
+      // }, 500);
     },
   });
 
@@ -62,7 +90,7 @@ export default function Login() {
     e.preventDefault();
 
     await mutate("POST", "/auth/login", {
-      identifier: formData.email, // 🔥 backend expects identifier
+      identifier: formData.email,
       password: formData.password,
     });
   };

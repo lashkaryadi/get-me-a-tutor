@@ -16,8 +16,6 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useMutation } from "@/hooks/useMutation";
-
-
 interface SignupData {
   name: string;
   email: string;

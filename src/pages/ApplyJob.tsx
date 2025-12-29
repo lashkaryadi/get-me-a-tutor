@@ -104,7 +104,7 @@ export default function ApplyJob() {
         formDataToSend.append('resume', formData.resume);
       }
 
-      const response = await apiClient.post('/applications/apply', formDataToSend, {
+      const response = await apiClient.post('/applications/${jobId}', formDataToSend, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 

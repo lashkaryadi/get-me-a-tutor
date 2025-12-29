@@ -1,4 +1,5 @@
-
+import apiClient from "@/api/apiClient";
+import { useApi } from "@/hooks/useApi";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,8 +19,6 @@ import {
   ChevronDown,
   X,
 } from "lucide-react";
-import apiClient from "@/api/apiClient";
-import { useApi } from "@/hooks/useApi";
 import { useToast } from "@/components/ui/use-toast";
 
 const subjects = [
@@ -34,92 +33,106 @@ const subjects = [
   "Test Prep",
 ];
 
-const tutors = [
-  {
-    id: 1,
-    name: "Dr. Priya Sharma",
-    subject: "Mathematics",
-    specialization: "Calculus, Algebra, Statistics",
-    rating: 4.9,
-    reviews: 234,
-    hourlyRate: 800,
-    experience: "8 years",
-    location: "Mumbai, India",
-    avatar: "PS",
-    verified: true,
-    featured: true,
-  },
-  {
-    id: 2,
-    name: "Rahul Verma",
-    subject: "Physics",
-    specialization: "JEE Main, NEET Physics",
-    rating: 4.8,
-    reviews: 189,
-    hourlyRate: 600,
-    experience: "5 years",
-    location: "Delhi, India",
-    avatar: "RV",
-    verified: true,
-    featured: false,
-  },
-  {
-    id: 3,
-    name: "Anjali Patel",
-    subject: "English",
-    specialization: "IELTS, TOEFL, Academic Writing",
-    rating: 4.9,
-    reviews: 312,
-    hourlyRate: 700,
-    experience: "6 years",
-    location: "Bangalore, India",
-    avatar: "AP",
-    verified: true,
-    featured: true,
-  },
-  {
-    id: 4,
-    name: "Vikram Singh",
-    subject: "Programming",
-    specialization: "Python, JavaScript, Data Science",
-    rating: 4.7,
-    reviews: 156,
-    hourlyRate: 900,
-    experience: "4 years",
-    location: "Hyderabad, India",
-    avatar: "VS",
-    verified: true,
-    featured: false,
-  },
-  {
-    id: 5,
-    name: "Neha Gupta",
-    subject: "Chemistry",
-    specialization: "Organic Chemistry, NEET",
-    rating: 4.8,
-    reviews: 198,
-    hourlyRate: 650,
-    experience: "7 years",
-    location: "Pune, India",
-    avatar: "NG",
-    verified: true,
-    featured: false,
-  },
-  {
-    id: 6,
-    name: "Arjun Reddy",
-    subject: "Music",
-    specialization: "Guitar, Piano, Music Theory",
-    rating: 4.9,
-    reviews: 87,
-    hourlyRate: 500,
-    experience: "10 years",
-    location: "Chennai, India",
-    avatar: "AR",
-    verified: true,
-    featured: true,
-  },
-];
+interface Tutor {
+  _id: string;
+  name: string;
+  subject: string;
+  specialization: string;
+  rating: number;
+  reviews: number;
+  hourlyRate: number;
+  experience: string;
+  city?: string;
+  avatar: string;
+  verified: boolean;
+}
+
+// const tutors = [
+//   {
+//     id: 1,
+//     name: "Dr. Priya Sharma",
+//     subject: "Mathematics",
+//     specialization: "Calculus, Algebra, Statistics",
+//     rating: 4.9,
+//     reviews: 234,
+//     hourlyRate: 800,
+//     experience: "8 years",
+//     location: "Mumbai, India",
+//     avatar: "PS",
+//     verified: true,
+//     featured: true,
+//   },
+//   {
+//     id: 2,
+//     name: "Rahul Verma",
+//     subject: "Physics",
+//     specialization: "JEE Main, NEET Physics",
+//     rating: 4.8,
+//     reviews: 189,
+//     hourlyRate: 600,
+//     experience: "5 years",
+//     location: "Delhi, India",
+//     avatar: "RV",
+//     verified: true,
+//     featured: false,
+//   },
+//   {
+//     id: 3,
+//     name: "Anjali Patel",
+//     subject: "English",
+//     specialization: "IELTS, TOEFL, Academic Writing",
+//     rating: 4.9,
+//     reviews: 312,
+//     hourlyRate: 700,
+//     experience: "6 years",
+//     location: "Bangalore, India",
+//     avatar: "AP",
+//     verified: true,
+//     featured: true,
+//   },
+//   {
+//     id: 4,
+//     name: "Vikram Singh",
+//     subject: "Programming",
+//     specialization: "Python, JavaScript, Data Science",
+//     rating: 4.7,
+//     reviews: 156,
+//     hourlyRate: 900,
+//     experience: "4 years",
+//     location: "Hyderabad, India",
+//     avatar: "VS",
+//     verified: true,
+//     featured: false,
+//   },
+//   {
+//     id: 5,
+//     name: "Neha Gupta",
+//     subject: "Chemistry",
+//     specialization: "Organic Chemistry, NEET",
+//     rating: 4.8,
+//     reviews: 198,
+//     hourlyRate: 650,
+//     experience: "7 years",
+//     location: "Pune, India",
+//     avatar: "NG",
+//     verified: true,
+//     featured: false,
+//   },
+//   {
+//     id: 6,
+//     name: "Arjun Reddy",
+//     subject: "Music",
+//     specialization: "Guitar, Piano, Music Theory",
+//     rating: 4.9,
+//     reviews: 87,
+//     hourlyRate: 500,
+//     experience: "10 years",
+//     location: "Chennai, India",
+//     avatar: "AR",
+//     verified: true,
+//     featured: true,
+//   },
+// ];
 
 interface Job {
   _id: string;
@@ -146,6 +159,14 @@ export default function Feed() {
 
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"tutors" | "jobs">("tutors");
+  const {
+    data: teacherResponse,
+    loading: teacherLoading,
+    error: teacherError,
+  } = useApi<{ teachers: Tutor[] }>("/profile/public");
+
+  const tutors: Tutor[] = teacherResponse?.teachers ?? [];
+
   const [selectedSubject, setSelectedSubject] = useState("All Subjects");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -161,6 +182,9 @@ export default function Feed() {
     }
   }, [error, toast]);
 
+  if (teacherLoading) return <div className="p-8">Loading tutors...</div>;
+  if (teacherError)
+    return <div className="p-8 text-red-500">{teacherError}</div>;
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Something went wrong</div>;
   // // ADD this function to fetch jobs
@@ -310,10 +334,13 @@ export default function Feed() {
         {/* Content */}
         {activeTab === "tutors" ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {tutors.map((tutor) => (
+            {tutors.length === 0 ? (
+              <p className="text-muted-foreground">No tutors available</p>
+            ) : (
+            tutors.map((tutor) => (
               <Link
-                key={tutor.id}
-                to={`/tutor/${tutor.id}`}
+                key={tutor._id}
+                to={`/tutor/${tutor._id}`}
                 className="group rounded-2xl border border-border bg-card p-6 transition-all hover:border-primary hover:shadow-lg"
               >
                 {/* Header */}
@@ -379,7 +406,7 @@ export default function Feed() {
                   </div>
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <MapPin className="h-4 w-4" />
-                    {tutor.location.split(",")[0]}
+                    {tutor.city ?? "—"}
                   </div>
                 </div>
 
@@ -394,7 +421,7 @@ export default function Feed() {
                   <Button size="sm">View Profile</Button>
                 </div>
               </Link>
-            ))}
+            )))}
           </div>
         ) : (
           <div className="space-y-4">
@@ -449,4 +476,3 @@ export default function Feed() {
     </div>
   );
 }
-

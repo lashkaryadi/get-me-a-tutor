@@ -1,3 +1,5 @@
+import apiClient from "@/api/apiClient";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,7 +25,17 @@ type Step = 1 | 2 | 3 | 4;
 
 const jobTypes = ["Full-time", "Part-time", "Contract", "Freelance"];
 const experienceLevels = ["Fresher", "1-3 years", "3-5 years", "5+ years"];
-const subjects = ["Mathematics", "Physics", "Chemistry", "Biology", "English", "Hindi", "Computer Science", "Economics", "Other"];
+const subjects = [
+  "Mathematics",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "English",
+  "Hindi",
+  "Computer Science",
+  "Economics",
+  "Other",
+];
 
 export default function PostJob() {
   const [currentStep, setCurrentStep] = useState<Step>(1);
@@ -54,9 +67,24 @@ export default function PostJob() {
     if (currentStep > 1) setCurrentStep((prev) => (prev - 1) as Step);
   };
 
-  const handleSubmit = () => {
-    console.log("Job posted:", formData);
-    // Would redirect to success page
+  const navigate = useNavigate();
+
+  const handleSubmit = async () => {
+    try {
+      await apiClient.post("/jobs", {
+        title: formData.title,
+        description: formData.description,
+        subjects: [formData.subject],
+        location: formData.location,
+        jobType: formData.jobType.toLowerCase(),
+        salary: Number(formData.salaryMax),
+        deadline: formData.deadline,
+      });
+
+      navigate("/jobs");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const updateForm = (field: string, value: string | boolean) => {
@@ -85,8 +113,12 @@ export default function PostJob() {
 
         <div className="mx-auto max-w-3xl">
           <div className="mb-8 text-center">
-            <h1 className="mb-2 text-3xl font-bold text-foreground">Post a New Job</h1>
-            <p className="text-muted-foreground">Find the perfect tutor for your institution</p>
+            <h1 className="mb-2 text-3xl font-bold text-foreground">
+              Post a New Job
+            </h1>
+            <p className="text-muted-foreground">
+              Find the perfect tutor for your institution
+            </p>
           </div>
 
           {/* Progress Steps */}
@@ -102,12 +134,22 @@ export default function PostJob() {
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {currentStep > step.num ? <CheckCircle className="h-5 w-5" /> : step.num}
+                      {currentStep > step.num ? (
+                        <CheckCircle className="h-5 w-5" />
+                      ) : (
+                        step.num
+                      )}
                     </div>
-                    <span className="mt-2 text-xs text-muted-foreground">{step.title}</span>
+                    <span className="mt-2 text-xs text-muted-foreground">
+                      {step.title}
+                    </span>
                   </div>
                   {index < steps.length - 1 && (
-                    <div className={`mx-4 h-0.5 w-16 ${currentStep > step.num ? "bg-primary" : "bg-muted"}`} />
+                    <div
+                      className={`mx-4 h-0.5 w-16 ${
+                        currentStep > step.num ? "bg-primary" : "bg-muted"
+                      }`}
+                    />
                   )}
                 </div>
               ))}
@@ -162,7 +204,9 @@ export default function PostJob() {
                       placeholder="Describe the role, responsibilities, and what you're looking for..."
                       rows={5}
                       value={formData.description}
-                      onChange={(e) => updateForm("description", e.target.value)}
+                      onChange={(e) =>
+                        updateForm("description", e.target.value)
+                      }
                     />
                   </div>
                 </div>
@@ -199,13 +243,17 @@ export default function PostJob() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="qualifications">Qualifications Required *</Label>
+                    <Label htmlFor="qualifications">
+                      Qualifications Required *
+                    </Label>
                     <Textarea
                       id="qualifications"
                       placeholder="e.g., B.Ed, M.Sc in Mathematics, etc."
                       rows={3}
                       value={formData.qualifications}
-                      onChange={(e) => updateForm("qualifications", e.target.value)}
+                      onChange={(e) =>
+                        updateForm("qualifications", e.target.value)
+                      }
                     />
                   </div>
 
@@ -227,7 +275,9 @@ export default function PostJob() {
               <div className="space-y-6">
                 <div className="flex items-center gap-3 text-primary">
                   <IndianRupee className="h-6 w-6" />
-                  <h2 className="text-xl font-semibold">Location & Compensation</h2>
+                  <h2 className="text-xl font-semibold">
+                    Location & Compensation
+                  </h2>
                 </div>
 
                 <div className="space-y-4">
@@ -267,23 +317,31 @@ export default function PostJob() {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="salaryMin">Minimum Salary (₹/month)</Label>
+                      <Label htmlFor="salaryMin">
+                        Minimum Salary (₹/month)
+                      </Label>
                       <Input
                         id="salaryMin"
                         type="number"
                         placeholder="e.g., 25000"
                         value={formData.salaryMin}
-                        onChange={(e) => updateForm("salaryMin", e.target.value)}
+                        onChange={(e) =>
+                          updateForm("salaryMin", e.target.value)
+                        }
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="salaryMax">Maximum Salary (₹/month)</Label>
+                      <Label htmlFor="salaryMax">
+                        Maximum Salary (₹/month)
+                      </Label>
                       <Input
                         id="salaryMax"
                         type="number"
                         placeholder="e.g., 40000"
                         value={formData.salaryMax}
-                        onChange={(e) => updateForm("salaryMax", e.target.value)}
+                        onChange={(e) =>
+                          updateForm("salaryMax", e.target.value)
+                        }
                       />
                     </div>
                   </div>
@@ -296,7 +354,9 @@ export default function PostJob() {
                         type="number"
                         min="1"
                         value={formData.positions}
-                        onChange={(e) => updateForm("positions", e.target.value)}
+                        onChange={(e) =>
+                          updateForm("positions", e.target.value)
+                        }
                       />
                     </div>
                     <div className="space-y-2">
@@ -317,7 +377,9 @@ export default function PostJob() {
                       onChange={(e) => updateForm("urgent", e.target.checked)}
                       className="h-5 w-5 rounded border-border text-primary"
                     />
-                    <span className="text-sm text-foreground">Mark as urgent (highlighted in listings)</span>
+                    <span className="text-sm text-foreground">
+                      Mark as urgent (highlighted in listings)
+                    </span>
                   </label>
                 </div>
               </div>
@@ -332,34 +394,50 @@ export default function PostJob() {
                 </div>
 
                 <div className="rounded-xl border border-border bg-muted/50 p-6">
-                  <h3 className="mb-4 text-lg font-semibold text-foreground">{formData.title || "Job Title"}</h3>
-                  
+                  <h3 className="mb-4 text-lg font-semibold text-foreground">
+                    {formData.title || "Job Title"}
+                  </h3>
+
                   <div className="space-y-4 text-sm">
                     <div className="flex items-start gap-3">
                       <Briefcase className="mt-0.5 h-4 w-4 text-muted-foreground" />
                       <div>
-                        <span className="font-medium text-foreground">Subject: </span>
-                        <span className="text-muted-foreground">{formData.subject || "Not specified"}</span>
+                        <span className="font-medium text-foreground">
+                          Subject:{" "}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {formData.subject || "Not specified"}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
                       <div>
-                        <span className="font-medium text-foreground">Location: </span>
-                        <span className="text-muted-foreground">{formData.location || "Not specified"}</span>
+                        <span className="font-medium text-foreground">
+                          Location:{" "}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {formData.location || "Not specified"}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <Clock className="mt-0.5 h-4 w-4 text-muted-foreground" />
                       <div>
-                        <span className="font-medium text-foreground">Type: </span>
-                        <span className="text-muted-foreground">{formData.jobType || "Not specified"}</span>
+                        <span className="font-medium text-foreground">
+                          Type:{" "}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {formData.jobType || "Not specified"}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <IndianRupee className="mt-0.5 h-4 w-4 text-muted-foreground" />
                       <div>
-                        <span className="font-medium text-foreground">Salary: </span>
+                        <span className="font-medium text-foreground">
+                          Salary:{" "}
+                        </span>
                         <span className="text-muted-foreground">
                           {formData.salaryMin && formData.salaryMax
                             ? `₹${formData.salaryMin} - ₹${formData.salaryMax}/month`
@@ -370,16 +448,24 @@ export default function PostJob() {
                     <div className="flex items-start gap-3">
                       <Users className="mt-0.5 h-4 w-4 text-muted-foreground" />
                       <div>
-                        <span className="font-medium text-foreground">Experience: </span>
-                        <span className="text-muted-foreground">{formData.experience || "Not specified"}</span>
+                        <span className="font-medium text-foreground">
+                          Experience:{" "}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {formData.experience || "Not specified"}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   {formData.description && (
                     <div className="mt-4 border-t border-border pt-4">
-                      <span className="font-medium text-foreground">Description:</span>
-                      <p className="mt-2 text-muted-foreground">{formData.description}</p>
+                      <span className="font-medium text-foreground">
+                        Description:
+                      </span>
+                      <p className="mt-2 text-muted-foreground">
+                        {formData.description}
+                      </p>
                     </div>
                   )}
 

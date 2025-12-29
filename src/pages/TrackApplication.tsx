@@ -1,3 +1,4 @@
+import { useApi } from "@/hooks/useApi";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
@@ -16,7 +17,7 @@ import {
   IndianRupee,
 } from "lucide-react";
 
-type ApplicationStatus = "applied" | "under_review" | "shortlisted" | "interview" | "offered" | "rejected";
+type ApplicationStatus = "applied" | "shortlisted" | "rejected" | "selected";
 
 interface Application {
   id: number;
@@ -26,97 +27,148 @@ interface Application {
   salary: string;
   appliedDate: string;
   status: ApplicationStatus;
-  timeline: { step: string; date: string; completed: boolean; current?: boolean }[];
+  timeline: {
+    step: string;
+    date: string;
+    completed: boolean;
+    current?: boolean;
+  }[];
 }
 
-const applications: Application[] = [
-  {
-    id: 1,
-    jobTitle: "Mathematics Tutor",
-    institute: "ABC Academy",
-    location: "Mumbai, Maharashtra",
-    salary: "₹25,000 - ₹35,000/month",
-    appliedDate: "Dec 18, 2024",
-    status: "interview",
-    timeline: [
-      { step: "Application Submitted", date: "Dec 18, 2024", completed: true },
-      { step: "Under Review", date: "Dec 19, 2024", completed: true },
-      { step: "Shortlisted", date: "Dec 20, 2024", completed: true },
-      { step: "Interview Scheduled", date: "Dec 25, 2024", completed: false, current: true },
-      { step: "Offer", date: "", completed: false },
-    ],
-  },
-  {
-    id: 2,
-    jobTitle: "Physics Faculty",
-    institute: "XYZ Coaching",
-    location: "Delhi, NCR",
-    salary: "₹30,000 - ₹45,000/month",
-    appliedDate: "Dec 15, 2024",
-    status: "shortlisted",
-    timeline: [
-      { step: "Application Submitted", date: "Dec 15, 2024", completed: true },
-      { step: "Under Review", date: "Dec 16, 2024", completed: true },
-      { step: "Shortlisted", date: "Dec 22, 2024", completed: true, current: true },
-      { step: "Interview Scheduled", date: "", completed: false },
-      { step: "Offer", date: "", completed: false },
-    ],
-  },
-  {
-    id: 3,
-    jobTitle: "English Trainer",
-    institute: "Global Learning Center",
-    location: "Bangalore, Karnataka",
-    salary: "₹20,000 - ₹30,000/month",
-    appliedDate: "Dec 10, 2024",
-    status: "rejected",
-    timeline: [
-      { step: "Application Submitted", date: "Dec 10, 2024", completed: true },
-      { step: "Under Review", date: "Dec 11, 2024", completed: true },
-      { step: "Not Selected", date: "Dec 14, 2024", completed: true },
-    ],
-  },
-];
+// const applications: Application[] = [
+//   {
+//     id: 1,
+//     jobTitle: "Mathematics Tutor",
+//     institute: "ABC Academy",
+//     location: "Mumbai, Maharashtra",
+//     salary: "₹25,000 - ₹35,000/month",
+//     appliedDate: "Dec 18, 2024",
+//     status: "shortlisted",
+//     timeline: [
+//       { step: "Application Submitted", date: "Dec 18, 2024", completed: true },
+//       { step: "Under Review", date: "Dec 19, 2024", completed: true },
+//       { step: "Shortlisted", date: "Dec 20, 2024", completed: true },
+//       { step: "Interview Scheduled", date: "Dec 25, 2024", completed: false, current: true },
+//       { step: "Offer", date: "", completed: false },
+//     ],
+//   },
+//   {
+//     id: 2,
+//     jobTitle: "Physics Faculty",
+//     institute: "XYZ Coaching",
+//     location: "Delhi, NCR",
+//     salary: "₹30,000 - ₹45,000/month",
+//     appliedDate: "Dec 15, 2024",
+//     status: "shortlisted",
+//     timeline: [
+//       { step: "Application Submitted", date: "Dec 15, 2024", completed: true },
+//       { step: "Under Review", date: "Dec 16, 2024", completed: true },
+//       { step: "Shortlisted", date: "Dec 22, 2024", completed: true, current: true },
+//       { step: "Interview Scheduled", date: "", completed: false },
+//       { step: "Offer", date: "", completed: false },
+//     ],
+//   },
+//   {
+//     id: 3,
+//     jobTitle: "English Trainer",
+//     institute: "Global Learning Center",
+//     location: "Bangalore, Karnataka",
+//     salary: "₹20,000 - ₹30,000/month",
+//     appliedDate: "Dec 10, 2024",
+//     status: "rejected",
+//     timeline: [
+//       { step: "Application Submitted", date: "Dec 10, 2024", completed: true },
+//       { step: "Under Review", date: "Dec 11, 2024", completed: true },
+//       { step: "Not Selected", date: "Dec 14, 2024", completed: true },
+//     ],
+//   },
+// ];
 
 const getStatusBadge = (status: ApplicationStatus) => {
-  const styles: Record<ApplicationStatus, { bg: string; text: string; label: string }> = {
-    applied: { bg: "bg-muted", text: "text-muted-foreground", label: "Applied" },
-    under_review: { bg: "bg-warning/10", text: "text-warning", label: "Under Review" },
-    shortlisted: { bg: "bg-primary/10", text: "text-primary", label: "Shortlisted" },
-    interview: { bg: "bg-accent/10", text: "text-accent", label: "Interview" },
-    offered: { bg: "bg-success/10", text: "text-success", label: "Offered" },
-    rejected: { bg: "bg-destructive/10", text: "text-destructive", label: "Not Selected" },
+  const styles: Record<
+    ApplicationStatus,
+    { bg: string; text: string; label: string }
+  > = {
+    applied: {
+      bg: "bg-muted",
+      text: "text-muted-foreground",
+      label: "Applied",
+    },
+    //under_review: { bg: "bg-warning/10", text: "text-warning", label: "Under Review" },
+    shortlisted: {
+      bg: "bg-primary/10",
+      text: "text-primary",
+      label: "Shortlisted",
+    },
+    //interview: { bg: "bg-accent/10", text: "text-accent", label: "Interview" },
+    selected: { bg: "bg-success/10", text: "text-success", label: "Offered" },
+    rejected: {
+      bg: "bg-destructive/10",
+      text: "text-destructive",
+      label: "Not Selected",
+    },
   };
   return styles[status];
 };
 
 export default function TrackApplication() {
+  const { data, loading, error } = useApi("/applications/my");
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error loading applications</div>;
+
+  const applications =
+    (data as { applications: Application[] })?.applications || [];
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold text-foreground">Track Applications</h1>
-          <p className="text-muted-foreground">Monitor the status of your job applications</p>
+          <h1 className="mb-2 text-3xl font-bold text-foreground">
+            Track Applications
+          </h1>
+          <p className="text-muted-foreground">
+            Monitor the status of your job applications
+          </p>
         </div>
 
         {/* Summary Stats */}
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: "Total Applications", value: "3", icon: FileText, color: "primary" },
-            { label: "Under Review", value: "0", icon: Clock, color: "warning" },
-            { label: "Shortlisted", value: "2", icon: CheckCircle, color: "success" },
-            { label: "Interviews", value: "1", icon: Calendar, color: "accent" },
+            {
+              label: "Total Applications",
+              value: "3",
+              icon: FileText,
+              color: "primary",
+            },
+            //{ label: "Under Review", value: "0", icon: Clock, color: "warning" },
+            {
+              label: "Shortlisted",
+              value: "2",
+              icon: CheckCircle,
+              color: "success",
+            },
+            //{ label: "Interviews", value: "1", icon: Calendar, color: "accent" },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-xl border border-border bg-card p-4">
+            <div
+              key={stat.label}
+              className="rounded-xl border border-border bg-card p-4"
+            >
               <div className="flex items-center gap-3">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-${stat.color}/10`}>
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg bg-${stat.color}/10`}
+                >
                   <stat.icon className={`h-5 w-5 text-${stat.color}`} />
                 </div>
                 <div>
-                  <div className="text-xl font-bold text-foreground">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  <div className="text-xl font-bold text-foreground">
+                    {stat.value}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {stat.label}
+                  </div>
                 </div>
               </div>
             </div>
@@ -128,7 +180,10 @@ export default function TrackApplication() {
           {applications.map((app) => {
             const statusBadge = getStatusBadge(app.status);
             return (
-              <div key={app.id} className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div
+                key={app.id}
+                className="rounded-2xl border border-border bg-card overflow-hidden"
+              >
                 {/* Header */}
                 <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-start gap-4">
@@ -137,8 +192,12 @@ export default function TrackApplication() {
                     </div>
                     <div>
                       <div className="mb-1 flex items-center gap-3">
-                        <h2 className="text-xl font-semibold text-foreground">{app.jobTitle}</h2>
-                        <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadge.bg} ${statusBadge.text}`}>
+                        <h2 className="text-xl font-semibold text-foreground">
+                          {app.jobTitle}
+                        </h2>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadge.bg} ${statusBadge.text}`}
+                        >
                           {statusBadge.label}
                         </span>
                       </div>
@@ -173,10 +232,15 @@ export default function TrackApplication() {
 
                 {/* Timeline */}
                 <div className="border-t border-border bg-muted/30 p-6">
-                  <h3 className="mb-4 text-sm font-semibold text-foreground">Application Timeline</h3>
+                  <h3 className="mb-4 text-sm font-semibold text-foreground">
+                    Application Timeline
+                  </h3>
                   <div className="relative flex items-center justify-between">
                     {app.timeline.map((step, index) => (
-                      <div key={step.step} className="relative flex flex-1 flex-col items-center">
+                      <div
+                        key={step.step}
+                        className="relative flex flex-1 flex-col items-center"
+                      >
                         {/* Connector line */}
                         {index < app.timeline.length - 1 && (
                           <div
@@ -185,7 +249,7 @@ export default function TrackApplication() {
                             }`}
                           />
                         )}
-                        
+
                         {/* Step circle */}
                         <div
                           className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full ${
@@ -213,11 +277,17 @@ export default function TrackApplication() {
 
                         {/* Step label */}
                         <div className="mt-2 text-center">
-                          <div className={`text-xs font-medium ${step.current ? "text-primary" : "text-foreground"}`}>
+                          <div
+                            className={`text-xs font-medium ${
+                              step.current ? "text-primary" : "text-foreground"
+                            }`}
+                          >
                             {step.step}
                           </div>
                           {step.date && (
-                            <div className="text-xs text-muted-foreground">{step.date}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {step.date}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -233,8 +303,12 @@ export default function TrackApplication() {
         {applications.length === 0 && (
           <div className="rounded-2xl border border-border bg-card p-12 text-center">
             <FileText className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-            <h2 className="mb-2 text-xl font-semibold text-foreground">No Applications Yet</h2>
-            <p className="mb-6 text-muted-foreground">Start applying to jobs to track your applications here</p>
+            <h2 className="mb-2 text-xl font-semibold text-foreground">
+              No Applications Yet
+            </h2>
+            <p className="mb-6 text-muted-foreground">
+              Start applying to jobs to track your applications here
+            </p>
             <Button asChild>
               <Link to="/feed">
                 Browse Jobs

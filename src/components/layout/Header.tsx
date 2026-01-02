@@ -72,21 +72,22 @@ export function Header() {
             <div className="absolute right-0 mt-2 hidden w-48 rounded-xl border border-border bg-card shadow-lg group-hover:block">
               <Link
                 to={
-                  user.role === "tutor"
-                    ? `/tutor/${user.id}`
-                    : `/${user.role}/dashboard`
+                  // user.role === "institute"
+                  //   ? `/institute/${user.id}`
+                  //   : 
+                    `/institute/dashboard`
                 }
                 className="block px-4 py-2 text-sm hover:bg-muted"
               >
                 My Profile
               </Link>
 
-              <Link
-                to={`/${user.role}/dashboard`}
+              {/* <Link
+                to={`/institute/dashboard`}
                 className="block px-4 py-2 text-sm hover:bg-muted"
               >
                 Dashboard
-              </Link>
+              </Link> */}
 
               <button
                 onClick={() => {

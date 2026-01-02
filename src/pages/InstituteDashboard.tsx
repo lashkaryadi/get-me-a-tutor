@@ -19,27 +19,32 @@ import {
   FileText,
   Settings,
 } from "lucide-react";
+import { useApi } from "@/hooks/useApi";
+import { useMemo } from "react";
 
-const stats = [
-  { label: "Active Jobs", value: "8", icon: Briefcase, trend: "+2 this month", color: "primary" },
-  { label: "Total Applications", value: "156", icon: FileText, trend: "+23 this week", color: "success" },
-  { label: "Profile Views", value: "2.4K", icon: Eye, trend: "+15% vs last month", color: "warning" },
-  { label: "Hired Tutors", value: "12", icon: Users, trend: "4 this quarter", color: "accent" },
-];
 
-const activeJobs = [
-  { id: 1, title: "Mathematics Tutor", applications: 24, views: 156, status: "active", posted: "3 days ago", expires: "27 days left" },
-  { id: 2, title: "Physics Faculty", applications: 18, views: 98, status: "active", posted: "1 week ago", expires: "21 days left" },
-  { id: 3, title: "English Trainer", applications: 12, views: 67, status: "active", posted: "2 weeks ago", expires: "14 days left" },
-  { id: 4, title: "Chemistry Teacher", applications: 8, views: 45, status: "paused", posted: "3 weeks ago", expires: "7 days left" },
-];
 
-const recentApplications = [
-  { id: 1, name: "Amit Sharma", job: "Mathematics Tutor", experience: "5 years", status: "pending", date: "2 hours ago" },
-  { id: 2, name: "Priya Verma", job: "Physics Faculty", experience: "3 years", status: "shortlisted", date: "5 hours ago" },
-  { id: 3, name: "Rahul Kumar", job: "English Trainer", experience: "4 years", status: "rejected", date: "1 day ago" },
-  { id: 4, name: "Sneha Gupta", job: "Mathematics Tutor", experience: "6 years", status: "pending", date: "1 day ago" },
-];
+
+// const stats = [
+//   { label: "Active Jobs", value: "8", icon: Briefcase, trend: "+2 this month", color: "primary" },
+//   { label: "Total Applications", value: "156", icon: FileText, trend: "+23 this week", color: "success" },
+//   { label: "Profile Views", value: "2.4K", icon: Eye, trend: "+15% vs last month", color: "warning" },
+//   { label: "Hired Tutors", value: "12", icon: Users, trend: "4 this quarter", color: "accent" },
+// ];
+
+// const activeJobs = [
+//   { id: 1, title: "Mathematics Tutor", applications: 24, views: 156, status: "active", posted: "3 days ago", expires: "27 days left" },
+//   { id: 2, title: "Physics Faculty", applications: 18, views: 98, status: "active", posted: "1 week ago", expires: "21 days left" },
+//   { id: 3, title: "English Trainer", applications: 12, views: 67, status: "active", posted: "2 weeks ago", expires: "14 days left" },
+//   { id: 4, title: "Chemistry Teacher", applications: 8, views: 45, status: "paused", posted: "3 weeks ago", expires: "7 days left" },
+// ];
+
+// const recentApplications = [
+//   { id: 1, name: "Amit Sharma", job: "Mathematics Tutor", experience: "5 years", status: "pending", date: "2 hours ago" },
+//   { id: 2, name: "Priya Verma", job: "Physics Faculty", experience: "3 years", status: "shortlisted", date: "5 hours ago" },
+//   { id: 3, name: "Rahul Kumar", job: "English Trainer", experience: "4 years", status: "rejected", date: "1 day ago" },
+//   { id: 4, name: "Sneha Gupta", job: "Mathematics Tutor", experience: "6 years", status: "pending", date: "1 day ago" },
+// ];
 
 const analytics = [
   { day: "Mon", applications: 12 },
@@ -52,7 +57,61 @@ const analytics = [
 ];
 
 export default function InstituteDashboard() {
+  const { data, loading } = useApi<{ success: boolean; jobs: any[] }>("/jobs/my");
+const jobs = useMemo(
+  () => (Array.isArray(data?.jobs) ? data.jobs : []),
+  [data?.jobs]
+);
+
+
+  const { data: appsData } = useApi<{ success: boolean; applications: any[] }>(
+  "/applications/my-received"
+);
+const applications = useMemo(
+  () => (Array.isArray(appsData?.applications) ? appsData.applications : []),
+  [appsData?.applications]
+);
+
+const recentApplications = applications.slice(0, 4);
+
+
   const maxApplications = Math.max(...analytics.map((a) => a.applications));
+
+  const stats = useMemo(() => {
+  const activeJobs = jobs.filter(j => j.status === "active");
+
+  return [
+    {
+      label: "Active Jobs",
+      value: activeJobs.length.toString(),
+      icon: Briefcase,
+      trend: "Live",
+      color: "primary",
+    },
+    {
+      label: "Total Applications",
+  value: applications.length.toString(),
+      icon: FileText,
+      trend: "All time",
+      color: "success",
+    },
+    {
+      label: "Profile Views",
+      value: "—",
+      icon: Eye,
+      trend: "Coming soon",
+      color: "warning",
+    },
+    {
+      label: "Hired Tutors",
+      value: "—",
+      icon: Users,
+      trend: "Coming soon",
+      color: "accent",
+    },
+  ];
+}, [jobs, applications]);
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -103,9 +162,9 @@ export default function InstituteDashboard() {
               </div>
 
               <div className="space-y-4">
-                {activeJobs.map((job) => (
+                {jobs.map((job) => (
                   <div
-                    key={job.id}
+                    key={job._id}
                     className="flex flex-col gap-4 rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="flex-1">
@@ -124,19 +183,22 @@ export default function InstituteDashboard() {
                       <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <FileText className="h-4 w-4" />
-                          {job.applications} applications
+                          {job.applicationsCount ?? 0} applications
                         </span>
                         <span className="flex items-center gap-1">
                           <Eye className="h-4 w-4" />
-                          {job.views} views
+                          {job.views ?? 0} views
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          {job.expires}
+                          {job.deadline}
                         </span>
                       </div>
                     </div>
                     <div className="flex gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/manage-applications/${job._id}`}>View Applications</Link>
+                      </Button>
                       <Button variant="outline" size="sm">
                         Edit
                       </Button>
@@ -170,6 +232,8 @@ export default function InstituteDashboard() {
             </div>
           </div>
 
+
+
           {/* Sidebar */}
           <div className="space-y-8">
             {/* Recent Applications */}
@@ -177,21 +241,26 @@ export default function InstituteDashboard() {
               <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-foreground">Recent Applications</h2>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to="/institute/applications">View All</Link>
+                  <Link to="/institute/jobs">View All</Link>
                 </Button>
               </div>
 
               <div className="space-y-4">
                 {recentApplications.map((app) => (
-                  <div key={app.id} className="flex items-start justify-between border-b border-border pb-4 last:border-0 last:pb-0">
+                  <div key={app._id} className="flex items-start justify-between border-b border-border pb-4 last:border-0 last:pb-0">
                     <div className="flex items-start gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
-                        {app.name.split(" ").map((n) => n[0]).join("")}
+                        {app.tutor?.name
+          ? app.tutor.name.split(" ").map((n) => n[0]).join("")
+          : "U"}
                       </div>
                       <div>
-                        <div className="font-medium text-foreground">{app.name}</div>
-                        <div className="text-sm text-muted-foreground">{app.job}</div>
-                        <div className="text-xs text-muted-foreground">{app.date}</div>
+                        <div className="font-medium text-foreground">          {app.tutor?.name || "Unknown Tutor"}
+</div>
+                        <div className="text-sm text-muted-foreground">          {app.job?.title || "Job"}
+</div>
+                        <div className="text-xs text-muted-foreground">          {new Date(app.createdAt).toLocaleDateString()}
+</div>
                       </div>
                     </div>
                     <span
@@ -216,7 +285,7 @@ export default function InstituteDashboard() {
               <div className="space-y-2">
                 {[
                   { icon: Plus, label: "Post New Job", to: "/post-job" },
-                  { icon: Users, label: "View Applications", to: "/institute/applications" },
+                  { icon: Users, label: "View Applications", to: "/institute/jobs" },
                   { icon: Calendar, label: "Schedule Interviews", to: "/institute/interviews" },
                   { icon: Settings, label: "Institute Settings", to: "/institute/settings" },
                 ].map((action) => (

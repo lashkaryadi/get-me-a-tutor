@@ -18,10 +18,13 @@ import TrackApplication from "./pages/TrackApplication";
 import SuperadminDashboard from "./pages/SuperadminDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import CompleteTutorProfile from "@/pages/CompleteTutorProfile";
+import MyApplications from "./pages/MyApplications";
+import ManageApplications from "./pages/ManageApplications";
 import NotFound from "./pages/NotFound";
+import InstituteJobs from "./pages/InstituteJobs";
 
 const queryClient = new QueryClient();
-<Route path="/" element={<Signup />} />
+<Route path="/" element={<Signup />} />;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -44,7 +47,14 @@ const App = () => (
           <Route path="/track-application" element={<TrackApplication />} />
           <Route path="/admin" element={<SuperadminDashboard />} />
           <Route path="/olympiad" element={<Olympiad />} />
+          <Route path="/my-applications" element={<MyApplications />} />
+          <Route path="/manage-applications/:jobId" element={<ManageApplications />} />
           <Route path="/complete-profile" element={<CompleteTutorProfile />} />
+          <Route path="/institute/jobs" element={<InstituteJobs />} />
+          <Route
+            path="/edit-profile"
+            element={<CompleteTutorProfile isEdit />}
+          />
           <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

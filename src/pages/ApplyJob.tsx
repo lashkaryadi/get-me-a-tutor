@@ -8,7 +8,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useApi } from "@/hooks/useApi";
 import { useMutation } from "@/hooks/useMutation";
-import apiClient  from "@/api/apiClient";
+import apiClient from "@/api/apiClient";
 import {
   ArrowLeft,
   MapPin,
@@ -23,7 +23,6 @@ import {
   Mail,
 } from "lucide-react";
 
-
 interface Job {
   id: string;
   title: string;
@@ -32,6 +31,7 @@ interface Job {
   salary: string;
   type: string;
   requirements: string[];
+  subjects: string[];
 }
 
 interface ApplicationData {
@@ -47,11 +47,19 @@ interface ApplicationData {
 }
 
 export default function ApplyJob() {
-  const { jobId } = useParams<{ jobId: string }>();
+  const params = useParams();
+  // Handle both :id and :jobId route parameters to be safe
+  const jobId = (params.id || params.jobId || "").trim();
   const navigate = useNavigate();
 
   // Job details fetch करो
-  const { data: job, loading: jobLoading } = useApi<Job>(`/jobs/${jobId}`);
+  const {
+    data,
+    loading: jobLoading,
+    error,
+  } = useApi<any>(jobId ? `/jobs/${jobId}` : "");
+
+  const job = data?.job;
 
   // Application submit करो
   const { mutate: submitApplication, isLoading } = useMutation({
@@ -79,45 +87,46 @@ export default function ApplyJob() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        resume: file
+        resume: file,
       }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await submitApplication("POST", "/applications/apply", formData);
-  }; 
 
-  const handleApplyJob = async () => {
-    try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('jobId', formData.jobId);
-      formDataToSend.append('fullName', formData.fullName);
-      formDataToSend.append('email', formData.email);
-      formDataToSend.append('experience', formData.experience);
-      formDataToSend.append('currentLocation', formData.currentLocation);
-      formDataToSend.append('expectedSalary', formData.expectedSalary);
-      if (formData.resume) {
-        formDataToSend.append('resume', formData.resume);
-      }
+    const payload = {
+      experience: formData.experience,
+      currentLocation: formData.currentLocation,
+      expectedSalary: formData.expectedSalary,
+      message: formData.coverLetter,
+    };
 
-      const response = await apiClient.post('/applications/${jobId}', formDataToSend, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      if (response?.status === 200 || response?.status === 201) {
-        // Handle success
-        console.log('Application submitted successfully');
-      }
-    } catch (error) {
-      console.error('Error submitting application:', error);
-    }
+    await submitApplication("POST", "/applications/apply", {
+      jobId,
+      experience: formData.experience,
+      currentLocation: formData.currentLocation,
+      expectedSalary: formData.expectedSalary,
+      message: formData.coverLetter,
+    });
   };
 
   if (jobLoading) return <div>Loading job details...</div>;
+
+  if (error || !job || Array.isArray(job)) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-4">
+        <div className="text-lg text-muted-foreground">
+          Job not found or invalid link
+        </div>
+        <Button variant="outline" onClick={() => navigate("/feed")}>
+          Browse Other Jobs
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -140,7 +149,9 @@ export default function ApplyJob() {
                 <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl gradient-primary">
                   <Building2 className="h-7 w-7 text-primary-foreground" />
                 </div>
-                <h2 className="mb-2 text-xl font-bold text-foreground">{job.title}</h2>
+                <h2 className="mb-2 text-xl font-bold text-foreground">
+                  {job.title}
+                </h2>
 
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
@@ -153,15 +164,20 @@ export default function ApplyJob() {
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="h-4 w-4" />
-                    {job.type}
+                    {job.jobType}
                   </div>
                 </div>
 
                 <div className="mt-6 border-t border-border pt-4">
-                  <h3 className="mb-3 font-semibold text-foreground">Requirements</h3>
+                  <h3 className="mb-3 font-semibold text-foreground">
+                    Requirements
+                  </h3>
                   <ul className="space-y-2">
-                    {job.requirements.map((req, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    {(job.subjects || []).map((req: string, index: number) => (
+                      <li
+                        key={index}
+                        className="flex items-start gap-2 text-sm text-muted-foreground"
+                      >
                         <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                         {req}
                       </li>
@@ -174,8 +190,12 @@ export default function ApplyJob() {
             {/* Application Form */}
             <div className="lg:col-span-3">
               <div className="rounded-2xl border border-border bg-card p-6 lg:p-8">
-                <h1 className="mb-2 text-2xl font-bold text-foreground">Apply for this Position</h1>
-                <p className="mb-8 text-muted-foreground">Fill in your details to submit your application</p>
+                <h1 className="mb-2 text-2xl font-bold text-foreground">
+                  Apply for this Position
+                </h1>
+                <p className="mb-8 text-muted-foreground">
+                  Fill in your details to submit your application
+                </p>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -188,7 +208,12 @@ export default function ApplyJob() {
                           className="pl-12"
                           placeholder="Enter your full name"
                           value={formData.fullName}
-                          onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              fullName: e.target.value,
+                            })
+                          }
                           required
                         />
                       </div>
@@ -203,7 +228,9 @@ export default function ApplyJob() {
                           className="pl-12"
                           placeholder="Enter your email"
                           value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({ ...formData, email: e.target.value })
+                          }
                           required
                         />
                       </div>
@@ -221,7 +248,9 @@ export default function ApplyJob() {
                           className="pl-12"
                           placeholder="Enter your phone number"
                           value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({ ...formData, phone: e.target.value })
+                          }
                           required
                         />
                       </div>
@@ -232,7 +261,12 @@ export default function ApplyJob() {
                         id="experience"
                         placeholder="e.g., 3 years"
                         value={formData.experience}
-                        onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            experience: e.target.value,
+                          })
+                        }
                         required
                       />
                     </div>
@@ -240,7 +274,9 @@ export default function ApplyJob() {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="currentLocation">Current Location *</Label>
+                      <Label htmlFor="currentLocation">
+                        Current Location *
+                      </Label>
                       <div className="relative">
                         <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                         <Input
@@ -248,13 +284,20 @@ export default function ApplyJob() {
                           className="pl-12"
                           placeholder="Your city"
                           value={formData.currentLocation}
-                          onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              currentLocation: e.target.value,
+                            })
+                          }
                           required
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="expectedSalary">Expected Salary (₹/month)</Label>
+                      <Label htmlFor="expectedSalary">
+                        Expected Salary (₹/month)
+                      </Label>
                       <div className="relative">
                         <IndianRupee className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                         <Input
@@ -263,7 +306,12 @@ export default function ApplyJob() {
                           className="pl-12"
                           placeholder="e.g., 30000"
                           value={formData.expectedSalary}
-                          onChange={(e) => setFormData({ ...formData, expectedSalary: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              expectedSalary: e.target.value,
+                            })
+                          }
                         />
                       </div>
                     </div>
@@ -276,7 +324,12 @@ export default function ApplyJob() {
                       placeholder="Tell us why you're a great fit for this position..."
                       rows={5}
                       value={formData.coverLetter}
-                      onChange={(e) => setFormData({ ...formData, coverLetter: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          coverLetter: e.target.value,
+                        })
+                      }
                     />
                   </div>
 
@@ -295,24 +348,43 @@ export default function ApplyJob() {
                           <div className="flex items-center justify-center gap-3">
                             <FileText className="h-8 w-8 text-primary" />
                             <div className="text-left">
-                              <p className="font-medium text-foreground">{formData.resume.name}</p>
-                              <p className="text-sm text-muted-foreground">Click to change file</p>
+                              <p className="font-medium text-foreground">
+                                {formData.resume.name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Click to change file
+                              </p>
                             </div>
                           </div>
                         ) : (
                           <>
                             <Upload className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
-                            <p className="font-medium text-foreground">Drop your resume here or click to upload</p>
-                            <p className="mt-1 text-sm text-muted-foreground">PDF, DOC, DOCX up to 5MB</p>
+                            <p className="font-medium text-foreground">
+                              Drop your resume here or click to upload
+                            </p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              PDF, DOC, DOCX up to 5MB
+                            </p>
                           </>
                         )}
                       </label>
                     </div>
                   </div>
 
-                  <Button type="submit" size="lg" className="w-full" onClick={handleApplyJob}>
-                    <CheckCircle className="h-5 w-5" />
-                    Submit Application
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <span className="animate-pulse">Submitting...</span>
+                    ) : (
+                      <>
+                        <CheckCircle className="mr-2 h-5 w-5" /> Submit
+                        Application
+                      </>
+                    )}
                   </Button>
                 </form>
               </div>

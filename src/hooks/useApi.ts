@@ -6,6 +6,7 @@ interface UseApiState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
+  refetch?: () => Promise<void>;
 }
 
 export function useApi<T>(endpoint: string): UseApiState<T> {
@@ -14,9 +15,8 @@ export function useApi<T>(endpoint: string): UseApiState<T> {
     loading: true,
     error: null,
   });
-
-  useEffect(() => {
-    const fetchData = async () => {
+  
+  const fetchData = async () => {
       try {
         setState({ data: null, loading: true, error: null });
         const response = await apiClient.get(endpoint);
@@ -37,10 +37,11 @@ export function useApi<T>(endpoint: string): UseApiState<T> {
         });
       }
     };
-
+  useEffect(() => {
     fetchData();
   }, [endpoint]);
 
-  return state;
+  return {...state, refetch: fetchData};
+
 }
 

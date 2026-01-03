@@ -2,6 +2,8 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, GraduationCap } from "lucide-react";
 import { useState } from "react";
+import { useApi } from "@/hooks/useApi";
+import { profile } from "console";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -10,10 +12,25 @@ const navLinks = [
   { href: "/olympiad", label: "Olympiad" },
 ];
 
+
+
 export function Header() {
+
   const user = localStorage.getItem("user")
     ? JSON.parse(localStorage.getItem("user") as string)
     : null;
+
+    const isTutor = user?.role === "tutor";
+
+const { data: myProfileData } = useApi<{
+  success: boolean;
+  profile: {_id: string};
+}>(
+  isTutor ? "/profile/teacher/me" : "/profile/student/me"
+);
+
+const myProfileId = myProfileData?.profile._id;
+
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -71,16 +88,17 @@ export function Header() {
             {/* Dropdown */}
             <div className="absolute right-0 mt-2 hidden w-48 rounded-xl border border-border bg-card shadow-lg group-hover:block">
               <Link
-                to={
-                  // user.role === "institute"
-                  //   ? `/institute/${user.id}`
-                  //   : 
-                    `/institute/dashboard`
-                }
-                className="block px-4 py-2 text-sm hover:bg-muted"
-              >
-                My Profile
-              </Link>
+  to={
+    user.role === "tutor" && myProfileId
+      ? `/tutor/${myProfileId}`
+      : "/institute/dashboard"
+  }
+  className="block px-4 py-2 text-sm hover:bg-muted"
+>
+  My Profile
+</Link>
+
+
 
               {/* <Link
                 to={`/institute/dashboard`}

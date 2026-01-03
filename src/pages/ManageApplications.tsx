@@ -44,33 +44,58 @@ interface Job {
 
 export default function ManageApplications() {
   const { jobId } = useParams();
-  const [refreshKey, setRefreshKey] = useState(0);
+//   const [refreshKey, setRefreshKey] = useState(0);
 
   // Fetch job details and applications separately
   const { data } = useApi<{ success: boolean; job: Job }>(
-    jobId ? `/jobs/${jobId}` : ""
+    jobId ? `/jobs/${jobId}` : null as any
   );
 
   const job = data?.job;
-  const { data: response, loading } = useApi<{
-    success: boolean;
-    applications: Applicant[];
-  }>(jobId ? `/applications/job/${jobId}?r=${refreshKey}` : "");
+const {
+  data: response,
+  loading,
+  refetch,
+} = useApi<{ success: boolean; applications: Applicant[] }>(
+  jobId ? `/applications/job/${jobId}` : null as any
+);
+
+
   const applications = response?.applications || [];
 
   // Mutation to update status
+//   const { mutate: updateStatus, isLoading: isUpdating } = useMutation({
+//     successMsg: "Status updated successfully",
+//     onSuccess: () => setRefreshKey((prev) => prev + 1),
+//   });
+
+
+
   const { mutate: updateStatus, isLoading: isUpdating } = useMutation({
-    successMsg: "Status updated successfully",
-    onSuccess: () => setRefreshKey((prev) => prev + 1),
-  });
+  successMsg: "Status updated successfully",
+  onSuccess: () => refetch(),
+});
+
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
-    await updateStatus("PATCH", `/applications/${id}/status`, {
-      status: newStatus,
-    });
-  };
+//   const handleStatusChange = async (id: string, newStatus: string) => {
+//     await updateStatus("PATCH", `/applications/${id}/status`, {
+//       status: newStatus,
+//     });
+//   };
+
+const handleStatusChange = async (
+  applicationId: string,
+  status: "rejected" | "shortlisted" | "selected"
+) => {
+  await updateStatus(
+    "PATCH",
+    `/applications/${applicationId}/status`,
+    { status }
+  );
+};
+
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
@@ -305,3 +330,7 @@ export default function ManageApplications() {
     </div>
   );
 }
+// function refetch(): void {
+//     throw new Error("Function not implemented.");
+// }
+

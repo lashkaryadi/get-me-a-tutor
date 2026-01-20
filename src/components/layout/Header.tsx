@@ -46,7 +46,7 @@ const myProfileId = myProfileData?.profile._id;
             <GraduationCap className="h-6 w-6 text-primary-foreground" />
           </div>
           {/* <span className="text-xl font-bold text-foreground"> */}
-                    <span className="whitespace-nowrap text-base font-bold sm:text-lg">
+                    <span className="whitespace-nowrap text-sm font-bold sm:text-base md:text-lg">
             Get Me A <span className="text-primary">Tutor</span>
           </span>
         </Link>
@@ -57,7 +57,7 @@ const myProfileId = myProfileData?.profile._id;
             <Link
               key={link.href}
               to={link.href}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:py-2 ${
                 isActive(link.href)
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -69,24 +69,23 @@ const myProfileId = myProfileData?.profile._id;
         </nav>
 
         {/* Desktop Actions */}
-
         {user ? (
           /* -------- LOGGED IN -------- */
           <div className="relative group">
-            <button className="flex items-center gap-3 rounded-full border border-border bg-card px-3 py-1.5 hover:border-primary transition">
+            <button className="flex items-center gap-2 rounded-full border border-border bg-card px-2 py-1.5 sm:px-3 sm:py-1.5 hover:border-primary transition">
               {/* Avatar */}
-              <div className="flex h-8 w-8 items-center justify-center rounded-full gradient-primary text-sm font-bold text-primary-foreground">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full gradient-primary text-xs font-bold text-primary-foreground sm:h-8 sm:w-8 sm:text-sm">
                 {user.name?.charAt(0).toUpperCase()}
               </div>
 
               {/* Name */}
-              <span className="hidden md:block text-sm font-medium text-foreground">
+              <span className="hidden text-xs font-medium text-foreground sm:block sm:text-sm md:text-base">
                 {user.name}
               </span>
             </button>
 
             {/* Dropdown */}
-            <div className="absolute right-0 mt-2 hidden w-48 rounded-xl border border-border bg-card shadow-lg group-hover:block">
+            <div className="absolute right-0 mt-2 hidden w-48 rounded-xl border border-border bg-card shadow-lg group-hover:block z-50">
               <Link
   to={
     user.role === "tutor" && myProfileId
@@ -120,25 +119,16 @@ const myProfileId = myProfileData?.profile._id;
           </div>
         ) : (
           /* -------- NOT LOGGED IN -------- */
-          <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-2 sm:gap-3 md:flex">
             <Link to="/login">
-              <Button variant="outline">Login</Button>
+              <Button variant="outline" size="sm">Login</Button>
             </Link>
 
-            <Button asChild>
+            <Button size="sm" asChild>
               <Link to="/signup">Get Started</Link>
             </Button>
           </div>
         )}
-
-        {/* <div className="hidden items-center gap-3 md:flex">
-          <Button variant="ghost" asChild>
-            <Link to="/login">Log in</Link>
-          </Button>
-          <Button asChild>
-            <Link to="/signup">Get Started</Link>
-          </Button>
-        </div> */}
 
         {/* Mobile Menu Toggle */}
         <button
@@ -155,7 +145,7 @@ const myProfileId = myProfileData?.profile._id;
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="border-t border-border bg-card md:hidden">
+        <div className="border-t border-border bg-card md:hidden fixed top-16 left-0 right-0 z-40 min-h-[calc(100vh-4rem)]">
           <nav className="container mx-auto flex flex-col gap-2 px-4 py-4">
             {navLinks.map((link) => (
               <Link
@@ -171,7 +161,7 @@ const myProfileId = myProfileData?.profile._id;
                 {link.label}
               </Link>
             ))}
-            <div className="mt-4 flex flex-col gap-6 border-t border-border pt-4">
+            <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4">
               <Button variant="outline" asChild className="w-full">
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                   Log in

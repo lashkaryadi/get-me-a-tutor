@@ -33,6 +33,7 @@ const myProfileId = myProfileData?.profile._id;
 
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
@@ -71,8 +72,11 @@ const myProfileId = myProfileData?.profile._id;
         {/* Desktop Actions */}
         {user ? (
           /* -------- LOGGED IN -------- */
-          <div className="relative group">
-            <button className="flex items-center gap-2 rounded-full border border-border bg-card px-2 py-1.5 sm:px-3 sm:py-1.5 hover:border-primary transition">
+          <div className="relative">
+            <button
+              className="flex items-center gap-2 rounded-full border border-border bg-card px-2 py-1.5 sm:px-3 sm:py-1.5 hover:border-primary transition"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+            >
               {/* Avatar */}
               <div className="flex h-7 w-7 items-center justify-center rounded-full gradient-primary text-xs font-bold text-primary-foreground sm:h-8 sm:w-8 sm:text-sm">
                 {user.name?.charAt(0).toUpperCase()}
@@ -85,37 +89,40 @@ const myProfileId = myProfileData?.profile._id;
             </button>
 
             {/* Dropdown */}
-            <div className="absolute right-0 mt-2 hidden w-48 rounded-xl border border-border bg-card shadow-lg group-hover:block z-50">
-              <Link
-  to={
-    user.role === "tutor" && myProfileId
-      ? `/tutor/${myProfileId}`
-      : "/institute/dashboard"
-  }
-  className="block px-4 py-2 text-sm hover:bg-muted"
->
-  My Profile
-</Link>
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-card shadow-lg z-50">
+                <Link
+                  to={
+                    user.role === "tutor" && myProfileId
+                      ? `/tutor/${myProfileId}`
+                      : "/institute/dashboard"
+                  }
+                  className="block px-4 py-2 text-sm hover:bg-muted"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  My Profile
+                </Link>
 
+                {/* <Link
+                  to={`/institute/dashboard`}
+                  className="block px-4 py-2 text-sm hover:bg-muted"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  Dashboard
+                </Link> */}
 
-
-              {/* <Link
-                to={`/institute/dashboard`}
-                className="block px-4 py-2 text-sm hover:bg-muted"
-              >
-                Dashboard
-              </Link> */}
-
-              <button
-                onClick={() => {
-                  localStorage.clear();
-                  window.location.href = "/login";
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-muted"
-              >
-                Logout
-              </button>
-            </div>
+                <button
+                  onClick={() => {
+                    localStorage.clear();
+                    setDropdownOpen(false); // Close dropdown after logout
+                    window.location.href = "/login";
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-muted"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           /* -------- NOT LOGGED IN -------- */

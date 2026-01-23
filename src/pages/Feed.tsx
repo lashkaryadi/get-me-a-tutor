@@ -68,11 +68,13 @@ interface JobsResponse {
 }
 
 export default function Feed() {
-  const { data, loading, error } = useApi<JobsResponse>("/jobs/all");
+  // Public endpoint: GET /jobs/alljobs (matches backend contract)
+  const { data, loading, error } = useApi<JobsResponse>("/jobs/alljobs");
   const jobs = Array.isArray(data?.jobs) ? data.jobs : [];
 
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"tutors" | "jobs">("tutors");
+  // Public endpoint: GET /profile/public
   const {
     data: teacherResponse,
     loading: teacherLoading,

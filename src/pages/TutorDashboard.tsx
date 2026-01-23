@@ -24,22 +24,31 @@ import { useApi } from "@/hooks/useApi";
 
 export default function TutorDashboard() {
   const { credits } = useCredit();
+  // Private endpoint: GET /profile/teacher/me (requires auth)
   const { data: profileData, loading: profileLoading } = useApi("/profile/teacher/me");
+  
+  // Private endpoint: GET /applications/my (requires auth, tutor only)
+  const { data: applicationsData, loading: applicationsLoading } = useApi<{
+    success: boolean;
+    applications: any[];
+  }>("/applications/my");
 
-  // Mock data for tutor stats
+  const recentApplications = Array.isArray(applicationsData?.applications)
+    ? applicationsData.applications.slice(0, 4)
+    : [];
+
+  // Mock data for stats (would be derived from applications and profile in production)
   const stats = [
-    { label: "Total Applications", value: "24", icon: FileText, trend: "+5 this week", color: "primary" },
+    { 
+      label: "Total Applications", 
+      value: applicationsData?.applications?.length?.toString() ?? "0", 
+      icon: FileText, 
+      trend: "+5 this week", 
+      color: "primary" 
+    },
     { label: "Successful Matches", value: "8", icon: CheckCircle, trend: "30% conversion", color: "success" },
     { label: "Profile Views", value: "156", icon: Eye, trend: "+23 this week", color: "warning" },
     { label: "Avg Rating", value: "4.9", icon: Star, trend: "Based on 42 reviews", color: "accent" },
-  ];
-
-  // Mock data for recent applications
-  const recentApplications = [
-    { id: 1, jobTitle: "Mathematics Tutor", employer: "ABC Academy", status: "shortlisted", date: "2 days ago", salary: "₹25,000" },
-    { id: 2, jobTitle: "Physics Faculty", employer: "XYZ Coaching", status: "rejected", date: "3 days ago", salary: "₹30,000" },
-    { id: 3, jobTitle: "Science Teacher", employer: "Global Learning", status: "pending", date: "5 days ago", salary: "₹28,000" },
-    { id: 4, jobTitle: "Mathematics Expert", employer: "Elite Tutors", status: "shortlisted", date: "1 week ago", salary: "₹35,000" },
   ];
 
   // Mock data for earnings
@@ -54,7 +63,7 @@ export default function TutorDashboard() {
 
   const maxEarning = Math.max(...earnings.map(a => a.amount));
 
-  if (profileLoading) return <div className="p-8">Loading profile...</div>;
+  if (profileLoading || applicationsLoading) return <div className="p-8">Loading dashboard...</div>;
 
   return (
     <div className="min-h-screen bg-background">

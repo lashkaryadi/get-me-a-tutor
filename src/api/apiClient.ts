@@ -9,9 +9,10 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor
+// Request interceptor - attach Bearer token
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  // Check both 'accessToken' (new standard) and 'token' (legacy)
+  const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -22,8 +23,12 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      // Token expired, try to refresh
+    const originalConfig = error.config;
+
+    // 401 Unauthorized - try to refresh token
+    if (error.response?.status === 401 && !originalConfig._retry) {
+      originalConfig._retry = true;
+
       const refreshToken = localStorage.getItem("refreshToken");
       if (refreshToken) {
         try {
@@ -33,25 +38,46 @@ apiClient.interceptors.response.use(
 
           if (res.data.accessToken) {
             localStorage.setItem("accessToken", res.data.accessToken);
-            error.config.headers.Authorization = `Bearer ${res.data.accessToken}`;
-            return apiClient.request(error.config);
+            originalConfig.headers.Authorization = `Bearer ${res.data.accessToken}`;
+            return apiClient.request(originalConfig);
           }
         } catch (refreshError) {
-          // Refresh failed, redirect to login
+          console.error("Token refresh failed:", refreshError);
+          // Refresh failed, clear storage and redirect to login
           localStorage.clear();
           window.location.href = "/login";
+          return Promise.reject(refreshError);
         }
       } else {
-        // No refresh token, redirect to login
+        // No refresh token available, redirect to login
         localStorage.clear();
         window.location.href = "/login";
+        return Promise.reject(error);
       }
     }
+
+    // 403 Forbidden - permission denied (don't retry)
+    if (error.response?.status === 403) {
+      console.warn("Access denied (403):", error.response.data?.message);
+      return Promise.reject(error);
+    }
+
+    // 404 Not Found - endpoint mismatch (don't retry)
+    if (error.response?.status === 404) {
+      console.error("Endpoint not found (404):", originalConfig.url);
+      return Promise.reject(error);
+    }
+
     return Promise.reject(error);
   }
 );
 
 export default apiClient;
 
+/**
+ * Fetch user by ID from /auth/:id
+ * Used for credit fetching
+ * Automatically includes Authorization header
+ */
 export const getUserById = (id: string) =>
   apiClient.get(`/auth/${id}`);

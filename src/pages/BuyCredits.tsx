@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useCredit } from "@/context/CreditContext";
+import apiClient from "@/api/apiClient";
 import { CheckCircle } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const plans = [
   { credits: 10, amount: 199 },  // ₹199 for 10 credits
@@ -15,86 +17,120 @@ const plans = [
 export default function BuyCredits() {
   const navigate = useNavigate();
   const { refreshCredits } = useCredit();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
+  /**
+   * Initiate Razorpay payment flow
+   * 1. Create order on backend (/api/payments/create-order)
+   * 2. Open Razorpay checkout
+   * 3. Verify payment on backend (/api/payments/verify-payment)
+   * 4. Credits will be added via webhook (backend handles)
+   * 5. Refresh credits and redirect
+   */
   const handlePayment = async (amount: number, credits: number) => {
+    if (loading) return;
+    
     setLoading(true);
     try {
-      // Call backend to create Razorpay order
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/create-order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify({ amount }),
+      // Step 1: Create Razorpay order
+      const response = await apiClient.post("/api/payments/create-order", { 
+        amount 
       });
 
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.message || 'Failed to create order');
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Failed to create order");
       }
 
+      const { order } = response.data;
+
+      // Step 2: Configure and open Razorpay checkout
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: data.order.amount,
-        currency: data.order.currency,
-        order_id: data.order.id,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.id,
         name: "Get Me A Tutor",
         description: `${credits} Credits Purchase`,
-        handler: async (response: any) => {
+        handler: async (razorpayResponse: any) => {
           try {
-            // Verify payment with backend
-            const verifyResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/verify-payment`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-              },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            });
+            // Step 3: Verify payment with backend
+            const verifyResponse = await apiClient.post(
+              "/api/payments/verify-payment",
+              {
+                razorpay_order_id: razorpayResponse.razorpay_order_id,
+                razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+                razorpay_signature: razorpayResponse.razorpay_signature,
+              }
+            );
 
-            const verifyData = await verifyResponse.json();
-            if (verifyData.success) {
-              // Payment verified successfully, but credits will be added via webhook
-              // Show success message and redirect to dashboard
-              alert('Payment successful! Credits will be added shortly.');
+            if (verifyResponse.data.success) {
+              // Step 4 & 5: Webhook handles credits, we refresh and redirect
+              toast({
+                title: "Payment Successful ✅",
+                description: "Credits will be added to your account shortly.",
+              });
 
-              // Redirect to appropriate dashboard based on user role
-              const user = JSON.parse(localStorage.getItem('user') || '{}');
-              if (user.role === 'tutor') {
-                navigate('/tutor/dashboard');
-              } else if (user.role === 'institute') {
-                navigate('/institute/dashboard');
+              await new Promise((resolve) => setTimeout(resolve, 1500));
+              await refreshCredits();
+
+              // Redirect to appropriate dashboard
+              if (user.role === "tutor") {
+                navigate("/tutor/dashboard");
+              } else if (user.role === "institute") {
+                navigate("/institute/dashboard");
               } else {
-                navigate('/');
+                navigate("/feed");
               }
             } else {
-              alert('Payment verification failed');
+              throw new Error(
+                verifyResponse.data.message || "Payment verification failed"
+              );
             }
-          } catch (error) {
-            console.error('Payment verification error:', error);
-            alert('Payment verification failed');
+          } catch (verifyError: any) {
+            console.error("Payment verification error:", verifyError);
+            toast({
+              title: "Verification Failed ❌",
+              description:
+                verifyError.message || "Could not verify your payment",
+              variant: "destructive",
+            });
           }
         },
         prefill: {
-          name: JSON.parse(localStorage.getItem('user') || '{}').name,
-          email: JSON.parse(localStorage.getItem('user') || '{}').email,
+          name: user.name || "",
+          email: user.email || "",
         },
         theme: {
-          color: '#3b82f6',
+          color: "#3b82f6",
         },
       };
 
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
-    } catch (error) {
-      console.error('Payment creation error:', error);
-      alert('Failed to initiate payment');
+      // Load Razorpay script if not already loaded
+      if (!(window as any).Razorpay) {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = () => {
+          const rzp = new (window as any).Razorpay(options);
+          rzp.open();
+        };
+        document.body.appendChild(script);
+      } else {
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      }
+    } catch (error: any) {
+      console.error("Payment creation error:", error);
+      const errorMsg =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to initiate payment";
+      toast({
+        title: "Payment Error ❌",
+        description: errorMsg,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -120,7 +156,7 @@ export default function BuyCredits() {
                   <CheckCircle className="h-5 w-5 text-success" />
                   <h3 className="text-lg font-semibold">{plan.credits} Credits</h3>
                 </div>
-                
+
                 <div className="mb-6">
                   <span className="text-3xl font-bold">₹{plan.amount}</span>
                   <span className="text-muted-foreground"> / one time</span>
@@ -128,10 +164,10 @@ export default function BuyCredits() {
 
                 <Button
                   className="w-full"
-                  onClick={() => handlePayment(plan.amount * 100, plan.credits)} // Razorpay expects amount in paise
+                  onClick={() => handlePayment(plan.amount * 100, plan.credits)}
                   disabled={loading}
                 >
-                  {loading ? 'Processing...' : 'Buy Now'}
+                  {loading ? "Processing..." : "Buy Now"}
                 </Button>
               </div>
             ))}

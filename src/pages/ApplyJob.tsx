@@ -22,6 +22,8 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
+import { getDashboardRoute } from "@/utils/navigation";
+import { useCredit } from "@/context/CreditContext";
 
 interface Job {
   id: string;
@@ -61,13 +63,23 @@ export default function ApplyJob() {
 
   const job = data?.job;
 
+  const { credits, refreshCredits } = useCredit();
+
   // Application submit करो
   const { mutate: submitApplication, isLoading } = useMutation({
     successMsg: "Application submitted successfully! ✅",
     errorMsg: "Failed to submit application ❌",
-    onSuccess: () => {
+    onSuccess: async () => {
+      await refreshCredits(); // Refresh credits after successful application
       setTimeout(() => {
-        navigate("/my-applications");
+        // Get user role from localStorage to determine redirect
+        const rawUser = localStorage.getItem("user");
+        if (rawUser) {
+          const user = JSON.parse(rawUser);
+          navigate(getDashboardRoute(user.role));
+        } else {
+          navigate("/my-applications");
+        }
       }, 1500);
     },
   });
@@ -121,7 +133,16 @@ export default function ApplyJob() {
         <div className="text-lg text-muted-foreground">
           Job not found or invalid link
         </div>
-        <Button variant="outline" onClick={() => navigate("/feed")}>
+        <Button variant="outline" onClick={() => {
+          // Get user role from localStorage to determine redirect
+          const rawUser = localStorage.getItem("user");
+          if (rawUser) {
+            const user = JSON.parse(rawUser);
+            navigate(getDashboardRoute(user.role));
+          } else {
+            navigate("/feed");
+          }
+        }}>
           Browse Other Jobs
         </Button>
       </div>
@@ -134,7 +155,16 @@ export default function ApplyJob() {
 
       <main className="container mx-auto px-4 py-8">
         <Link
-          to="/feed"
+          to={(() => {
+            // Get user role from localStorage to determine redirect
+            const rawUser = localStorage.getItem("user");
+            if (rawUser) {
+              const user = JSON.parse(rawUser);
+              return getDashboardRoute(user.role);
+            } else {
+              return "/feed";
+            }
+          })()}
           className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -375,10 +405,12 @@ export default function ApplyJob() {
                     type="submit"
                     size="lg"
                     className="w-full"
-                    disabled={isLoading}
+                    disabled={isLoading || credits < 1}
                   >
                     {isLoading ? (
                       <span className="animate-pulse">Submitting...</span>
+                    ) : credits < 1 ? (
+                      "Buy Credits"
                     ) : (
                       <>
                         <CheckCircle className="mr-2 h-5 w-5" /> Submit

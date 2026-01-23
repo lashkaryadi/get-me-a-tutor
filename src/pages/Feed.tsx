@@ -47,92 +47,6 @@ interface Tutor {
   verified: boolean;
 }
 
-// const tutors = [
-//   {
-//     id: 1,
-//     name: "Dr. Priya Sharma",
-//     subject: "Mathematics",
-//     specialization: "Calculus, Algebra, Statistics",
-//     rating: 4.9,
-//     reviews: 234,
-//     hourlyRate: 800,
-//     experience: "8 years",
-//     location: "Mumbai, India",
-//     avatar: "PS",
-//     verified: true,
-//     featured: true,
-//   },
-//   {
-//     id: 2,
-//     name: "Rahul Verma",
-//     subject: "Physics",
-//     specialization: "JEE Main, NEET Physics",
-//     rating: 4.8,
-//     reviews: 189,
-//     hourlyRate: 600,
-//     experience: "5 years",
-//     location: "Delhi, India",
-//     avatar: "RV",
-//     verified: true,
-//     featured: false,
-//   },
-//   {
-//     id: 3,
-//     name: "Anjali Patel",
-//     subject: "English",
-//     specialization: "IELTS, TOEFL, Academic Writing",
-//     rating: 4.9,
-//     reviews: 312,
-//     hourlyRate: 700,
-//     experience: "6 years",
-//     location: "Bangalore, India",
-//     avatar: "AP",
-//     verified: true,
-//     featured: true,
-//   },
-//   {
-//     id: 4,
-//     name: "Vikram Singh",
-//     subject: "Programming",
-//     specialization: "Python, JavaScript, Data Science",
-//     rating: 4.7,
-//     reviews: 156,
-//     hourlyRate: 900,
-//     experience: "4 years",
-//     location: "Hyderabad, India",
-//     avatar: "VS",
-//     verified: true,
-//     featured: false,
-//   },
-//   {
-//     id: 5,
-//     name: "Neha Gupta",
-//     subject: "Chemistry",
-//     specialization: "Organic Chemistry, NEET",
-//     rating: 4.8,
-//     reviews: 198,
-//     hourlyRate: 650,
-//     experience: "7 years",
-//     location: "Pune, India",
-//     avatar: "NG",
-//     verified: true,
-//     featured: false,
-//   },
-//   {
-//     id: 6,
-//     name: "Arjun Reddy",
-//     subject: "Music",
-//     specialization: "Guitar, Piano, Music Theory",
-//     rating: 4.9,
-//     reviews: 87,
-//     hourlyRate: 500,
-//     experience: "10 years",
-//     location: "Chennai, India",
-//     avatar: "AR",
-//     verified: true,
-//     featured: true,
-//   },
-// ];
 
 interface Job {
   _id: string;
@@ -154,7 +68,7 @@ interface JobsResponse {
 }
 
 export default function Feed() {
-  const { data, loading, error } = useApi<JobsResponse>("/jobs");
+  const { data, loading, error } = useApi<JobsResponse>("/jobs/all");
   const jobs = Array.isArray(data?.jobs) ? data.jobs : [];
 
   const { toast } = useToast();
@@ -187,40 +101,7 @@ export default function Feed() {
     return <div className="p-8 text-red-500">{teacherError}</div>;
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Something went wrong</div>;
-  // // ADD this function to fetch jobs
-  // const fetchJobs = async () => {
-  //   try {
-  //     const response = await apiClient.get('/jobs');
-  //     setJobs(response.data);
-  //   } catch (error) {
-  //     console.error("Error fetching jobs:", error);
-  //     // Only show toast ONCE, not during render
-  //     if (!hasShownError) {
-  //       toast({
-  //         title: "Error",
-  //         description: "Failed to load jobs. Please try again.",
-  //         variant: "destructive",
-  //       });
-  //       setHasShownError(true);
-  //     }
-  //   }
-  // };
-
-  // // Call fetchJobs in useEffect
-  // useEffect(() => {
-  //   fetchJobs();
-  // }, [hasShownError]);
-
   if (loading) return <div>Loading jobs...</div>;
-
-  // if (error) {
-  //   toast({
-  //     title: "Error ❌",
-  //     description: error,
-  //     variant: "destructive",
-  //   });
-  //   return <div>Failed to load jobs</div>;
-  // }
 
   return (
     <div className="min-h-screen bg-background">

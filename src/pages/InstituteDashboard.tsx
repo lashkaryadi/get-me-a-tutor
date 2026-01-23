@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useApi } from "@/hooks/useApi";
 import { useMemo } from "react";
+import { useCredit } from "@/context/CreditContext";
 
 
 
@@ -57,6 +58,7 @@ const analytics = [
 ];
 
 export default function InstituteDashboard() {
+  const { credits } = useCredit();
   const { data, loading } = useApi<{ success: boolean; jobs: any[] }>("/jobs/my");
 const jobs = useMemo(
   () => (Array.isArray(data?.jobs) ? data.jobs : []),
@@ -124,12 +126,17 @@ const recentApplications = applications.slice(0, 4);
             <h1 className="text-3xl font-bold text-foreground">Institute Dashboard</h1>
             <p className="text-muted-foreground">Manage your job postings and applications</p>
           </div>
-          <Button asChild size="lg">
-            <Link to="/post-job">
-              <Plus className="h-5 w-5" />
-              Post New Job
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="credit-pill bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
+              Credits: {credits}
+            </div>
+            <Button asChild size="lg">
+              <Link to="/post-job">
+                <Plus className="h-5 w-5" />
+                Post New Job
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Stats Grid */}

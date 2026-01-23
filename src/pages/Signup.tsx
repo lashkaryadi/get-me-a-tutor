@@ -153,7 +153,7 @@ export default function Signup() {
                           setSelectedRole(role.id);
                           setFormData((prev) => ({
                             ...prev,
-                            role: role.id, // 🔥 THIS IS CRITICAL
+                            role: role.id,
                           }));
                         }}
                         className={`group relative flex flex-col items-center gap-3 rounded-xl border-2 p-6 text-center transition-all

@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, GraduationCap } from "lucide-react";
 import { useState } from "react";
 import { useApi } from "@/hooks/useApi";
-import { profile } from "console";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -103,14 +102,7 @@ const myProfileId = myProfileData?.profile._id;
                   My Profile
                 </Link>
 
-                {/* <Link
-                  to={`/institute/dashboard`}
-                  className="block px-4 py-2 text-sm hover:bg-muted"
-                  onClick={() => setDropdownOpen(false)}
-                >
-                  Dashboard
-                </Link> */}
-
+        
                 <button
                   onClick={() => {
                     localStorage.clear();

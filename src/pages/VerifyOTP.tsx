@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ArrowLeft, Mail, CheckCircle } from "lucide-react";
-import apiClient from "@/api/apiClient";
+import { useMutation } from "@/hooks/useMutation";
 import { AxiosError } from "axios";
 
 export default function VerifyOTP() {
@@ -19,7 +19,18 @@ export default function VerifyOTP() {
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // 🔁 Resend timer
+  const { mutate: verifyOtp, isLoading } = useMutation({
+    successMsg: "Email verified successfully",
+    errorMsg: "OTP verification failed",
+    onSuccess: () => {
+      setIsVerified(true);
+
+      // cleanup
+      localStorage.removeItem("tempEmail");
+      localStorage.removeItem("tempUserId");
+    }
+  });
+
   useEffect(() => {
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer((t) => t - 1), 1000);
@@ -27,7 +38,6 @@ export default function VerifyOTP() {
     }
   }, [resendTimer]);
 
-  // 🔢 OTP input handler
   const handleChange = (index: number, value: string) => {
     if (!/^\d?$/.test(value)) return;
 
@@ -46,54 +56,33 @@ export default function VerifyOTP() {
     }
   };
 
-  // ✅ VERIFY OTP
-const handleVerify = async () => {
-  const otpCode = otp.join("");
-  const email = contact; // 👈 URL se already aa raha hai
+  const handleVerify = async () => {
+    const otpCode = otp.join("");
+    const email = contact;
 
-  if (!email || otpCode.length !== 6) {
-    alert("Email and OTP required");
-    return;
-  }
+    if (!email || otpCode.length !== 6) {
+      alert("Email and OTP required");
+      return;
+    }
 
-  try {
-    await apiClient.post("/auth/verify-email", {
+    verifyOtp("POST", "/auth/verify-email", {
       email,
       otp: otpCode,
     });
-
-    setIsVerified(true);
-
-    // cleanup
-    localStorage.removeItem("tempEmail");
-    localStorage.removeItem("tempUserId");
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      alert("OTP verification failed");
-    }
-  }
-};
+  };
 
 
-  // 🔁 RESEND OTP
+  const { mutate: resendOtp } = useMutation({
+    successMsg: "OTP resent successfully",
+    errorMsg: "Failed to resend OTP",
+  });
+
   const handleResend = async () => {
     if (resendTimer > 0) return;
 
-    try {
-      await apiClient.post("/auth/resend-email-otp", {
-        userId: localStorage.getItem("tempUserId"),
-      });
-
-      setResendTimer(30);
-      alert("OTP resent successfully");
-    } catch (error: unknown) {
-  if (error instanceof AxiosError) {
-    alert(error.response?.data?.message || "OTP verification failed");
-  } else {
-    alert("Something went wrong");
-  }
-}
-
+    resendOtp("POST", "/auth/resend-email-otp", {
+      userId: localStorage.getItem("tempUserId"),
+    });
   };
 
   // 🎉 SUCCESS SCREEN

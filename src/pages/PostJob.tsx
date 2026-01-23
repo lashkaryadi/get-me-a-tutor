@@ -1,4 +1,3 @@
-import apiClient from "@/api/apiClient";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -8,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { useMutation } from "@/hooks/useMutation";
+import { getDashboardRoute } from "@/utils/navigation";
+import { useCredit } from "@/context/CreditContext";
 
 import {
   ArrowLeft,
@@ -68,23 +70,39 @@ export default function PostJob() {
   };
 
   const navigate = useNavigate();
+  const { credits, refreshCredits } = useCredit();
+
+  const { mutate: createJob, isLoading } = useMutation({
+    successMsg: "Job posted successfully",
+    errorMsg: "Failed to post job",
+    onSuccess: async () => {
+      await refreshCredits(); // Refresh credits after successful job posting
+      // Get user role from localStorage to determine redirect
+      const rawUser = localStorage.getItem("user");
+      if (rawUser) {
+        const user = JSON.parse(rawUser);
+        navigate(getDashboardRoute(user.role));
+      } else {
+        navigate("/jobs");
+      }
+    }
+  });
 
   const handleSubmit = async () => {
-    try {
-      await apiClient.post("/jobs", {
-        title: formData.title,
-        description: formData.description,
-        subjects: [formData.subject],
-        location: formData.location,
-        jobType: formData.jobType.toLowerCase(),
-        salary: Number(formData.salaryMax),
-        deadline: formData.deadline,
-      });
-
-      navigate("/jobs");
-    } catch (err) {
-      console.error(err);
+    if (credits < 1) {
+      navigate("/buy-credits");
+      return;
     }
+
+    createJob("POST", "/jobs", {
+      title: formData.title,
+      description: formData.description,
+      subjects: [formData.subject],
+      location: formData.location,
+      jobType: formData.jobType.toLowerCase(),
+      salary: Number(formData.salaryMax),
+      deadline: formData.deadline,
+    });
   };
 
   const updateForm = (field: string, value: string | boolean) => {
@@ -104,7 +122,16 @@ export default function PostJob() {
 
       <main className="container mx-auto px-4 py-8">
         <Link
-          to="/institute/dashboard"
+          to={(() => {
+            // Get user role from localStorage to determine redirect
+            const rawUser = localStorage.getItem("user");
+            if (rawUser) {
+              const user = JSON.parse(rawUser);
+              return getDashboardRoute(user.role);
+            } else {
+              return "/institute/dashboard"; // fallback for institute role
+            }
+          })()}
           className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />

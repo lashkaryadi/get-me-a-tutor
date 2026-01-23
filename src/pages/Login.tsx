@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 import { GraduationCap, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useMutation } from "@/hooks/useMutation";
 import apiClient from "@/api/apiClient";
+import { getDashboardRoute } from "@/utils/navigation";
 
 interface LoginData {
   email: string;
@@ -51,38 +52,11 @@ export default function Login() {
         if (!profileRes.data.profile.isComplete) {
           navigate("/complete-profile");
         } else {
-          navigate("/feed");
+          navigate(getDashboardRoute(data.user.role));
         }
+      } else {
+        navigate(getDashboardRoute(data.user.role));
       }
-
-      navigate("/feed");
-      if (data.user.role === "institute") {
-        navigate("/institute/dashboard");
-      } else if (data.user.role === "student") {
-        navigate("/student/dashboard");
-      }
-
-      // else if (data.user.role === "tutor") {
-      //   navigate(`/tutor/${data.user.id}`);
-      // }
-      else {
-        navigate("/feed");
-      }
-
-      // setTimeout(() => {
-      // if (data.user.role === "institute") {
-      //   navigate("/institute/dashboard");
-      // } else if (data.user.role === "student") {
-      //   navigate("/student/dashboard");
-      // }
-
-      // // else if (data.user.role === "tutor") {
-      // //   navigate(`/tutor/${data.user.id}`);
-      // // }
-      // else {
-      //   navigate("/feed");
-      // }
-      // }, 500);
     },
   });
 

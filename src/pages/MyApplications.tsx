@@ -2,13 +2,15 @@ import { Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useApi } from "@/hooks/useApi";
-import { 
-  Building2, 
-  MapPin, 
-  Calendar, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import { getDashboardRoute } from "@/utils/navigation";
+import { useCredit } from "@/context/CreditContext";
+import {
+  Building2,
+  MapPin,
+  Calendar,
+  Clock,
+  CheckCircle,
+  XCircle,
   FileText,
   ArrowRight
 } from "lucide-react";
@@ -27,6 +29,7 @@ interface Application {
 }
 
 export default function MyApplications() {
+  const { credits } = useCredit();
   const { data: response, loading } = useApi<{ success: boolean; applications: Application[] }>("/applications/my");
   const applications = response?.applications || [];
 
@@ -60,7 +63,12 @@ export default function MyApplications() {
       <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">My Applications</h1>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+            <h1 className="text-2xl font-bold">My Applications</h1>
+            <div className="credit-pill bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mt-2 sm:mt-0">
+              Credits: {credits}
+            </div>
+          </div>
 
           {loading ? (
             <div className="space-y-4">
@@ -73,7 +81,18 @@ export default function MyApplications() {
               <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
               <h3 className="text-lg font-medium">No applications yet</h3>
               <p className="text-muted-foreground mb-4">Start applying to jobs to see them here.</p>
-              <Link to="/feed" className="text-primary hover:underline">Browse Jobs</Link>
+              <Link to={(() => {
+                // Get user role from localStorage to determine redirect
+                const rawUser = localStorage.getItem("user");
+                if (rawUser) {
+                  const user = JSON.parse(rawUser);
+                  return getDashboardRoute(user.role);
+                } else {
+                  return "/feed"; // fallback
+                }
+              })()} className="text-primary hover:underline">
+                Browse Jobs
+              </Link>
             </div>
           ) : (
             <div className="space-y-4">

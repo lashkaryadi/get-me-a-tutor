@@ -22,9 +22,11 @@ import MyApplications from "./pages/MyApplications";
 import ManageApplications from "./pages/ManageApplications";
 import NotFound from "./pages/NotFound";
 import InstituteJobs from "./pages/InstituteJobs";
+import BuyCredits from "./pages/BuyCredits";
+import TutorDashboard from "./pages/TutorDashboard";
+import ProtectedRoute from "@/routes/ProtectedRoute";
 
 const queryClient = new QueryClient();
-<Route path="/" element={<Signup />} />;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -41,21 +43,51 @@ const App = () => (
           <Route path="/feed" element={<Feed />} />
           <Route path="/jobs" element={<Feed />} />
           <Route path="/tutor/:id" element={<TutorProfile />} />
-          <Route path="/post-job" element={<PostJob />} />
+          <Route path="/post-job" element={
+            <ProtectedRoute allowedRoles={["institute"]}>
+              <PostJob />
+            </ProtectedRoute>
+          } />
           <Route path="/apply/:id" element={<ApplyJob />} />
-          <Route path="/institute/dashboard" element={<InstituteDashboard />} />
+          <Route path="/institute/dashboard" element={
+            <ProtectedRoute allowedRoles={["institute"]}>
+              <InstituteDashboard />
+            </ProtectedRoute>
+          } />
           <Route path="/track-application" element={<TrackApplication />} />
-          <Route path="/admin" element={<SuperadminDashboard />} />
+          <Route path="/admin" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <SuperadminDashboard />
+            </ProtectedRoute>
+          } />
           <Route path="/olympiad" element={<Olympiad />} />
-          <Route path="/my-applications" element={<MyApplications />} />
-          <Route path="/manage-applications/:jobId" element={<ManageApplications />} />
+          <Route path="/my-applications" element={
+            <ProtectedRoute allowedRoles={["tutor"]}>
+              <MyApplications />
+            </ProtectedRoute>
+          } />
+          <Route path="/tutor/dashboard" element={
+            <ProtectedRoute allowedRoles={["tutor"]}>
+              <TutorDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/manage-applications/:jobId" element={
+            <ProtectedRoute allowedRoles={["institute"]}>
+              <ManageApplications />
+            </ProtectedRoute>
+          } />
           <Route path="/complete-profile" element={<CompleteTutorProfile />} />
           <Route path="/institute/jobs" element={<InstituteJobs />} />
           <Route
             path="/edit-profile"
             element={<CompleteTutorProfile isEdit />}
           />
-          <Route path="/student/dashboard" element={<StudentDashboard />} />
+          <Route path="/student/dashboard" element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <StudentDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/buy-credits" element={<BuyCredits />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

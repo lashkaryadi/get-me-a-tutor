@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { getDashboardRoute } from "@/utils/navigation";
 import {
   CheckCircle,
   Clock,
@@ -35,55 +36,6 @@ interface Application {
   }[];
 }
 
-// const applications: Application[] = [
-//   {
-//     id: 1,
-//     jobTitle: "Mathematics Tutor",
-//     institute: "ABC Academy",
-//     location: "Mumbai, Maharashtra",
-//     salary: "₹25,000 - ₹35,000/month",
-//     appliedDate: "Dec 18, 2024",
-//     status: "shortlisted",
-//     timeline: [
-//       { step: "Application Submitted", date: "Dec 18, 2024", completed: true },
-//       { step: "Under Review", date: "Dec 19, 2024", completed: true },
-//       { step: "Shortlisted", date: "Dec 20, 2024", completed: true },
-//       { step: "Interview Scheduled", date: "Dec 25, 2024", completed: false, current: true },
-//       { step: "Offer", date: "", completed: false },
-//     ],
-//   },
-//   {
-//     id: 2,
-//     jobTitle: "Physics Faculty",
-//     institute: "XYZ Coaching",
-//     location: "Delhi, NCR",
-//     salary: "₹30,000 - ₹45,000/month",
-//     appliedDate: "Dec 15, 2024",
-//     status: "shortlisted",
-//     timeline: [
-//       { step: "Application Submitted", date: "Dec 15, 2024", completed: true },
-//       { step: "Under Review", date: "Dec 16, 2024", completed: true },
-//       { step: "Shortlisted", date: "Dec 22, 2024", completed: true, current: true },
-//       { step: "Interview Scheduled", date: "", completed: false },
-//       { step: "Offer", date: "", completed: false },
-//     ],
-//   },
-//   {
-//     id: 3,
-//     jobTitle: "English Trainer",
-//     institute: "Global Learning Center",
-//     location: "Bangalore, Karnataka",
-//     salary: "₹20,000 - ₹30,000/month",
-//     appliedDate: "Dec 10, 2024",
-//     status: "rejected",
-//     timeline: [
-//       { step: "Application Submitted", date: "Dec 10, 2024", completed: true },
-//       { step: "Under Review", date: "Dec 11, 2024", completed: true },
-//       { step: "Not Selected", date: "Dec 14, 2024", completed: true },
-//     ],
-//   },
-// ];
-
 const getStatusBadge = (status: ApplicationStatus) => {
   const styles: Record<
     ApplicationStatus,
@@ -94,13 +46,11 @@ const getStatusBadge = (status: ApplicationStatus) => {
       text: "text-muted-foreground",
       label: "Applied",
     },
-    //under_review: { bg: "bg-warning/10", text: "text-warning", label: "Under Review" },
     shortlisted: {
       bg: "bg-primary/10",
       text: "text-primary",
       label: "Shortlisted",
     },
-    //interview: { bg: "bg-accent/10", text: "text-accent", label: "Interview" },
     selected: { bg: "bg-success/10", text: "text-success", label: "Offered" },
     rejected: {
       bg: "bg-destructive/10",
@@ -143,14 +93,12 @@ export default function TrackApplication() {
               icon: FileText,
               color: "primary",
             },
-            //{ label: "Under Review", value: "0", icon: Clock, color: "warning" },
             {
               label: "Shortlisted",
               value: "2",
               icon: CheckCircle,
               color: "success",
             },
-            //{ label: "Interviews", value: "1", icon: Calendar, color: "accent" },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -310,7 +258,16 @@ export default function TrackApplication() {
               Start applying to jobs to track your applications here
             </p>
             <Button asChild>
-              <Link to="/feed">
+              <Link to={(() => {
+                // Get user role from localStorage to determine redirect
+                const rawUser = localStorage.getItem("user");
+                if (rawUser) {
+                  const user = JSON.parse(rawUser);
+                  return getDashboardRoute(user.role);
+                } else {
+                  return "/feed"; // fallback
+                }
+              })()}>
                 Browse Jobs
                 <ArrowRight className="h-5 w-5" />
               </Link>

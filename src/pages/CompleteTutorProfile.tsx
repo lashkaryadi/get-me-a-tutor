@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import apiClient from "@/api/apiClient";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { useMutation } from "@/hooks/useMutation";
+import { getDashboardRoute } from "@/utils/navigation";
 
 interface Props {
   isEdit?: boolean;
@@ -45,10 +46,25 @@ export default function CompleteTutorProfile({ isEdit = false }: Props) {
     fetchProfile();
   }, [isEdit]);
 
+  const { mutate: saveProfile, isLoading } = useMutation({
+    successMsg: isEdit ? "Profile updated" : "Profile completed",
+    errorMsg: "Failed to save profile",
+    onSuccess: () => {
+      // Get user role from localStorage to determine redirect
+      const rawUser = localStorage.getItem("user");
+      if (rawUser) {
+        const user = JSON.parse(rawUser);
+        navigate(getDashboardRoute(user.role));
+      } else {
+        navigate("/feed");
+      }
+    }
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    await apiClient.post("/profile/teacher", {
+    saveProfile("POST", "/profile/teacher", {
       bio: form.bio,
       experienceYears: Number(form.experienceYears),
       subjects: form.subjects.split(","),
@@ -58,8 +74,6 @@ export default function CompleteTutorProfile({ isEdit = false }: Props) {
         min: salaryMin,
       },
     });
-
-    navigate("/feed");
   };
 
   return (

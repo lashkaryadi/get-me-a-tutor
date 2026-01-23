@@ -130,6 +130,11 @@ const recentApplications = applications.slice(0, 4);
             <div className="credit-pill bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
               Credits: {credits}
             </div>
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/buy-credits">
+                Buy Credits
+              </Link>
+            </Button>
             <Button asChild size="lg">
               <Link to="/post-job">
                 <Plus className="h-5 w-5" />

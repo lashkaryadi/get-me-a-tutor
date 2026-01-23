@@ -33,9 +33,17 @@ export default function BuyCredits() {
     
     setLoading(true);
     try {
+      // Get user role from localStorage
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (!user || !user.role) {
+        throw new Error("User not authenticated");
+      }
+
       // Step 1: Create Razorpay order
       const response = await apiClient.post("/api/payments/create-order", { 
-        amount 
+        amount,
+        credits,
+        role: user.role
       });
 
       if (!response.data.success) {
@@ -45,7 +53,6 @@ export default function BuyCredits() {
       const { order } = response.data;
 
       // Step 2: Configure and open Razorpay checkout
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
@@ -53,6 +60,13 @@ export default function BuyCredits() {
         order_id: order.id,
         name: "Get Me A Tutor",
         description: `${credits} Credits Purchase`,
+        prefill: {
+          name: user.name || "",
+          email: user.email || "",
+        },
+        theme: {
+          color: "#3b82f6",
+        },
         handler: async (razorpayResponse: any) => {
           try {
             // Step 3: Verify payment with backend
@@ -96,24 +110,37 @@ export default function BuyCredits() {
                 verifyError.message || "Could not verify your payment",
               variant: "destructive",
             });
+            setLoading(false);
           }
         },
-        prefill: {
-          name: user.name || "",
-          email: user.email || "",
-        },
-        theme: {
-          color: "#3b82f6",
-        },
+        modal: {
+          ondismiss: () => {
+            // User closed Razorpay without payment
+            setLoading(false);
+            toast({
+              title: "Payment Cancelled",
+              description: "No charges have been made",
+            });
+          }
+        }
       };
 
       // Load Razorpay script if not already loaded
       if (!(window as any).Razorpay) {
         const script = document.createElement("script");
         script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
         script.onload = () => {
           const rzp = new (window as any).Razorpay(options);
           rzp.open();
+        };
+        script.onerror = () => {
+          setLoading(false);
+          toast({
+            title: "Script Load Error ❌",
+            description: "Failed to load payment processor",
+            variant: "destructive",
+          });
         };
         document.body.appendChild(script);
       } else {
@@ -131,7 +158,6 @@ export default function BuyCredits() {
         description: errorMsg,
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };

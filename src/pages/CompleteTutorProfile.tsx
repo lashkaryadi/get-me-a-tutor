@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useMutation } from "@/hooks/useMutation";
+import apiClient from "@/api/apiClient";
 import { getDashboardRoute } from "@/utils/navigation";
 
 interface Props {
@@ -30,17 +31,29 @@ export default function CompleteTutorProfile({ isEdit = false }: Props) {
     if (!isEdit) return;
 
     const fetchProfile = async () => {
-      const res = await apiClient.get("/profile/teacher/me");
-      const p = res.data.profile;
+      try {
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const userId = user.id;
+        
+        if (!userId) {
+          console.error("No user ID found in localStorage");
+          return;
+        }
 
-      setForm({
-        bio: p.bio || "",
-        experienceYears: String(p.experienceYears || ""),
-        subjects: p.subjects?.join(", ") || "",
-        classes: p.classes?.join(", ") || "",
-        city: p.city || "",
-        salaryMin: String(p.expectedSalary?.min || ""),
-      });
+        const res = await apiClient.get(`/profile/teacher/${userId}`);
+        const p = res.data.profile;
+
+        setForm({
+          bio: p.bio || "",
+          experienceYears: String(p.experienceYears || ""),
+          subjects: p.subjects?.join(", ") || "",
+          classes: p.classes?.join(", ") || "",
+          city: p.city || "",
+          salaryMin: String(p.expectedSalary?.min || ""),
+        });
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
     };
 
     fetchProfile();

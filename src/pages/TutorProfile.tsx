@@ -3,7 +3,6 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { Pencil } from "lucide-react";
 import {
   Star,
   MapPin,
@@ -182,15 +181,6 @@ export default function TutorProfile() {
                   </div>
                 </div>
               </div>
-              <Button variant="outline" size="icon">
-                <Link
-                  to="/complete-profile"
-                  
-                  //className="flex items-center gap-2 rounded-xl border border-primary px-4 py-2 text-sm text-muted-foreground transition hover:border-primary hover:text-primary"
-                >
-                  <Pencil className="h-5 w-5 " />  
-                </Link>
-              </Button>
             </div>
 
             {/* Actions */}

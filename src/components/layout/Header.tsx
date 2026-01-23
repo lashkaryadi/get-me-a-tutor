@@ -25,11 +25,20 @@ const { data: myProfileData } = useApi<{
   success: boolean;
   profile: {_id: string};
 }>(
-  isTutor ? "/profile/teacher/me" : "/profile/student/me"
+  isTutor ? "/profile/teacher/me" : null
 );
 
 const myProfileId = myProfileData?.profile._id;
 
+// Determine profile route based on role
+const getProfileRoute = () => {
+  if (user?.role === "tutor") return "/tutor/dashboard";
+  if (user?.role === "institute") return "/institute/dashboard";
+  if (user?.role === "parent") return "/parent/dashboard";
+  return "/student/dashboard";
+};
+
+const profileRoute = getProfileRoute();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -91,11 +100,7 @@ const myProfileId = myProfileData?.profile._id;
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-card shadow-lg z-50">
                 <Link
-                  to={
-                    user.role === "tutor" && myProfileId
-                      ? `/tutor/${myProfileId}`
-                      : "/institute/dashboard"
-                  }
+                  to={profileRoute}
                   className="block px-4 py-2 text-sm hover:bg-muted"
                   onClick={() => setDropdownOpen(false)}
                 >

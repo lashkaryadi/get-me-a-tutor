@@ -16,6 +16,8 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useMutation } from "@/hooks/useMutation";
+import { useToast } from "@/hooks/use-toast";
+
 interface SignupData {
   name: string;
   email: string;
@@ -78,11 +80,17 @@ export default function Signup() {
   });
 
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const { mutate, isLoading } = useMutation({
-    successMsg: "Signup successful! Check your email for OTP ✅",
     errorMsg: "Signup failed ❌",
     onSuccess: (data: SignupResponse) => {
+      // Show success toast
+      toast({
+        title: "Success",
+        description: "Signup successful! Check your email for OTP ✅",
+      });
+
       // Temp data save करो
       localStorage.setItem("tempEmail", formData.email);
       localStorage.setItem("tempUserId", data.userId);

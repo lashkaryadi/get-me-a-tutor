@@ -109,6 +109,12 @@ export default function ApplyJob() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Check if user has credits before submitting
+    if (credits < 1) {
+      navigate("/buy-credits");
+      return;
+    }
+
     const payload = {
       experience: formData.experience,
       currentLocation: formData.currentLocation,
@@ -123,6 +129,11 @@ export default function ApplyJob() {
       expectedSalary: formData.expectedSalary,
       message: formData.coverLetter,
     });
+  };
+
+  const handleBuyCreditsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate("/buy-credits");
   };
 
   if (jobLoading) return <div>Loading job details...</div>;
@@ -226,6 +237,20 @@ export default function ApplyJob() {
                 <p className="mb-8 text-muted-foreground">
                   Fill in your details to submit your application
                 </p>
+
+                {/* Credit Warning */}
+                {credits < 1 && (
+                  <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-800">
+                    <p className="font-semibold">You don't have enough credits to apply</p>
+                    <p className="text-sm mt-1">You need 1 credit to apply for this job. Purchase credits to continue.</p>
+                    <Button 
+                      className="mt-3 bg-yellow-600 hover:bg-yellow-700"
+                      onClick={handleBuyCreditsClick}
+                    >
+                      Buy Credits Now
+                    </Button>
+                  </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid gap-4 sm:grid-cols-2">

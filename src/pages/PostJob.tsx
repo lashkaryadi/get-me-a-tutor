@@ -41,6 +41,7 @@ const subjects = [
 
 export default function PostJob() {
   const [currentStep, setCurrentStep] = useState<Step>(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     // Step 1 - Basic Info
     title: "",
@@ -89,20 +90,35 @@ export default function PostJob() {
   });
 
   const handleSubmit = async () => {
+    // 🔒 PREVENT DOUBLE SUBMISSIONS
+    if (isSubmitting) return;
+
     if (credits < 1) {
       navigate("/buy-credits");
       return;
     }
 
-    createJob("POST", "/jobs", {
-      title: formData.title,
-      description: formData.description,
-      subjects: [formData.subject],
-      location: formData.location,
-      jobType: formData.jobType.toLowerCase(),
-      salary: Number(formData.salaryMax),
-      deadline: formData.deadline,
-    });
+    // 🚫 VALIDATE SALARY >= 10,000 BEFORE API CALL
+    const salary = Number(formData.salaryMax);
+    if (!salary || salary < 10000) {
+      alert("Salary must be at least ₹10,000");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await createJob("POST", "/jobs", {
+        title: formData.title,
+        description: formData.description,
+        subjects: [formData.subject],
+        location: formData.location,
+        jobType: formData.jobType.toLowerCase(),
+        salary: salary,
+        deadline: formData.deadline,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const updateForm = (field: string, value: string | boolean) => {

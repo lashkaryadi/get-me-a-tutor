@@ -119,48 +119,54 @@ export default function TutorDashboard() {
               </div>
 
               <div className="space-y-4">
-                {recentApplications.map((app) => (
-                  <div
-                    key={app.id}
-                    className="flex flex-col gap-4 rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div className="flex-1">
-                      <div className="mb-2 flex items-center gap-3">
-                        <h3 className="font-semibold text-foreground">{app.jobTitle}</h3>
-                        <span
-                          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            app.status === "pending"
-                              ? "bg-warning/10 text-warning"
-                              : app.status === "shortlisted"
-                              ? "bg-success/10 text-success"
-                              : "bg-destructive/10 text-destructive"
-                          }`}
-                        >
-                          {app.status === "pending" ? "Pending" : app.status === "shortlisted" ? "Shortlisted" : "Rejected"}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {app.employer}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <IndianRupee className="h-4 w-4" />
-                          {app.salary}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {app.date}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to={`/jobs/${app.id}`}>View Job</Link>
-                      </Button>
-                    </div>
+                {recentApplications.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No applications yet. <Link to="/feed" className="text-primary hover:underline">Browse jobs</Link></p>
                   </div>
-                ))}
+                ) : (
+                  recentApplications.map((app) => {
+                    const getStatusBadge = (status: string) => {
+                      const styles: { [key: string]: string } = {
+                        selected: "bg-green-100 text-green-700 border-green-200",
+                        shortlisted: "bg-blue-100 text-blue-700 border-blue-200",
+                        rejected: "bg-red-100 text-red-700 border-red-200",
+                        applied: "bg-yellow-100 text-yellow-700 border-yellow-200",
+                      };
+                      return styles[status] || "bg-gray-100 text-gray-700 border-gray-200";
+                    };
+
+                    return (
+                      <div
+                        key={app._id || app.id}
+                        className="flex flex-col gap-4 rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="flex-1">
+                          <div className="mb-2 flex items-center gap-3">
+                            <h3 className="font-semibold text-foreground">{app.job?.title || "Job Unavailable"}</h3>
+                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium border ${getStatusBadge(app.status)}`}>
+                              {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4" />
+                              {app.job?.location || "N/A"}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              Applied on {new Date(app.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to={`/jobs/${app.job?._id}`}>View Job</Link>
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 

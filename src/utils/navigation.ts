@@ -8,6 +8,8 @@ export function getDashboardRoute(role: string) {
       return "/tutor/dashboard";
     case "student":
       return "/student/dashboard";
+    case "parent":
+      return "/student/dashboard";
     default:
       return "/";
   }

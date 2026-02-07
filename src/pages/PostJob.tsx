@@ -83,7 +83,14 @@ export default function PostJob() {
 
       // Add a small delay to ensure backend processes the deduction
       await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-      await refreshCredits(); // Refresh credits after successful job posting
+
+      try {
+        await refreshCredits(); // Will retry automatically
+      } catch (error) {
+        console.warn("Credit refresh failed after job post, but job was created successfully");
+        // Don't block navigation - job was posted successfully
+      }
+
       // Get user role from localStorage to determine redirect
       const rawUser = localStorage.getItem("user");
       if (rawUser) {

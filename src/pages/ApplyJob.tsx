@@ -76,7 +76,14 @@ export default function ApplyJob() {
 
       // Add a small delay to ensure backend processes the deduction
       await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-      await refreshCredits(); // Refresh credits after successful application
+
+      try {
+        await refreshCredits(); // Will retry automatically
+      } catch (error) {
+        console.warn("Credit refresh failed after application, but application was submitted successfully");
+        // Don't block navigation - application was submitted successfully
+      }
+
       setTimeout(() => {
         // Get user role from localStorage to determine redirect
         const rawUser = localStorage.getItem("user");

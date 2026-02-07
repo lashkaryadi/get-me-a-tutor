@@ -87,7 +87,22 @@ export default function BuyCredits() {
               });
 
               await new Promise((resolve) => setTimeout(resolve, 1500));
-              await refreshCredits();
+
+              try {
+                await refreshCredits(); // Will retry automatically with exponential backoff
+
+                toast({
+                  title: "Credits Updated! ✅",
+                  description: "Your credits have been added successfully.",
+                });
+              } catch (error) {
+                // Payment succeeded but credit sync delayed
+                toast({
+                  title: "Credit Sync Delayed ⏳",
+                  description: "Your payment was successful, but credits are still processing. Please refresh in a moment.",
+                  variant: "default",
+                });
+              }
 
               // Redirect to appropriate dashboard
               if (user.role === "tutor") {

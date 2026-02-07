@@ -4,6 +4,7 @@ import apiClient from "@/api/apiClient";
 interface CreditContextType {
   credits: number;
   refreshCredits: () => Promise<void>;
+  isRefreshing: boolean;
 }
 
 const CreditContext = createContext<CreditContextType | undefined>(undefined);
@@ -22,32 +23,52 @@ interface CreditProviderProps {
 
 export const CreditProvider = ({ children }: CreditProviderProps) => {
   const [credits, setCredits] = useState<number>(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   /**
-   * Fetch credits from backend's /auth/:id endpoint
+   * Fetch credits from backend's /auth/me endpoint
    * This is the authoritative source of credit information
+   * Includes retry logic to handle slow webhook processing
    */
   const refreshCredits = async () => {
-    try {
-      const rawUser = localStorage.getItem("user");
-      const user = rawUser ? JSON.parse(rawUser) : null;
+    const maxRetries = 3;
+    setIsRefreshing(true);
 
-      if (!user?.id) {
-        console.warn("No user ID found, credits set to 0");
-        setCredits(0);
-        return;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const rawUser = localStorage.getItem("user");
+        const user = rawUser ? JSON.parse(rawUser) : null;
+
+        if (!user?.id) {
+          console.warn("No user ID found, credits set to 0");
+          setCredits(0);
+          setIsRefreshing(false);
+          return;
+        }
+
+        // Call /auth/:id endpoint with bearer token (auto-attached by apiClient)
+        const response = await apiClient.get(`/auth/me`);
+
+        // Extract credits from response
+        const fetchedCredits = response.data?.credits ?? response.data?.user?.credits ?? 0;
+        setCredits(fetchedCredits);
+        setIsRefreshing(false);
+        return; // Success!
+
+      } catch (error) {
+        console.error(`Credit refresh attempt ${attempt}/${maxRetries} failed:`, error);
+
+        if (attempt < maxRetries) {
+          // Exponential backoff: 1s, 2s, 4s
+          const delay = Math.pow(2, attempt - 1) * 1000;
+          console.log(`Retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          // Final attempt failed - throw error for caller to handle
+          setIsRefreshing(false);
+          throw error;
+        }
       }
-
-      // Call /auth/:id endpoint with bearer token (auto-attached by apiClient)
-      const response = await apiClient.get(`/auth/${user.id}`);
-      
-      // Extract credits from response
-      const fetchedCredits = response.data?.credits ?? response.data?.user?.credits ?? 0;
-      setCredits(fetchedCredits);
-    } catch (error) {
-      console.error("Failed to refresh credits:", error);
-      // Fail gracefully - don't crash the UI, keep previous credit value
-      // Backend remains source of truth
     }
   };
 
@@ -55,14 +76,19 @@ export const CreditProvider = ({ children }: CreditProviderProps) => {
   useEffect(() => {
     const rawUser = localStorage.getItem("user");
     if (rawUser) {
-      refreshCredits();
+      refreshCredits().catch((error) => {
+        console.error("Initial credit fetch failed:", error);
+        // Don't crash - just set credits to 0
+        setCredits(0);
+        setIsRefreshing(false);
+      });
     } else {
       setCredits(0);
     }
   }, []);
 
   return (
-    <CreditContext.Provider value={{ credits, refreshCredits }}>
+    <CreditContext.Provider value={{ credits, refreshCredits, isRefreshing }}>
       {children}
     </CreditContext.Provider>
   );

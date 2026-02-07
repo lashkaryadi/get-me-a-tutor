@@ -18,8 +18,12 @@ import {
   Calendar,
   FileText,
   Settings,
+  Trash2,
 } from "lucide-react";
 import { useApi } from "@/hooks/useApi";
+import { useMutation } from "@/hooks/useMutation";
+import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { useMemo } from "react";
 import { useCredit } from "@/context/CreditContext";
 
@@ -58,68 +62,92 @@ const analytics = [
 ];
 
 export default function InstituteDashboard() {
-    const { credits } = useCredit();
-  const { data, loading } = useApi<{ success: boolean; jobs: any[] }>("/jobs/my");
-const jobs = useMemo(
-  () => (Array.isArray(data?.jobs) ? data.jobs : []),
-  [data?.jobs]
-);
+  const { credits } = useCredit();
+  const { data, loading, refetch } = useApi<{ success: boolean; jobs: any[] }>("/jobs/my");
+
+  const { toast } = useToast();
+  const { mutate: deleteJobMutation } = useMutation({
+    successMsg: "Job deleted successfully",
+    errorMsg: "Failed to delete job",
+    onSuccess: () => refetch(),
+  });
+
+  const handleDelete = (jobId: string) => {
+    toast({
+      title: "Are you sure?",
+      description: "This action cannot be undone.",
+      variant: "destructive",
+      action: (
+        <ToastAction
+          altText="Delete"
+          onClick={() => deleteJobMutation("DELETE", `/jobs/${jobId}`)}
+        >
+          Delete
+        </ToastAction>
+      ),
+    });
+  };
+
+  const jobs = useMemo(
+    () => (Array.isArray(data?.jobs) ? data.jobs : []),
+    [data?.jobs]
+  );
 
 
   const { data: appsData, error: appsError } = useApi<{ success: boolean; applications: any[] }>(
-  "/applications/my-received"
-);
-const applications = useMemo(
-  () => (Array.isArray(appsData?.applications) ? appsData.applications : []),
-  [appsData?.applications]
-);
+    "/applications/my-received"
+  );
+  const applications = useMemo(
+    () => (Array.isArray(appsData?.applications) ? appsData.applications : []),
+    [appsData?.applications]
+  );
 
-// Handle backend error silently - if there's an error, show empty array
-const recentApplications = useMemo(() => {
-  if (appsError) {
-    console.warn("Silently handling backend error for received applications:", appsError);
-    return []; // Return empty array if there's an error
-  }
-  return applications.slice(0, 4);
-}, [applications, appsError]);
+  // Handle backend error silently - if there's an error, show empty array
+  const recentApplications = useMemo(() => {
+    if (appsError) {
+      console.warn("Silently handling backend error for received applications:", appsError);
+      return []; // Return empty array if there's an error
+    }
+    return applications.slice(0, 4);
+  }, [applications, appsError]);
 
 
   const maxApplications = Math.max(...analytics.map((a) => a.applications));
 
   const stats = useMemo(() => {
-  const activeJobs = jobs.filter(j => j.status === "active");
+    const activeJobs = jobs.filter(j => j.status === "active");
 
-  return [
-    {
-      label: "Active Jobs",
-      value: activeJobs.length.toString(),
-      icon: Briefcase,
-      trend: "Live",
-      color: "primary",
-    },
-    {
-      label: "Total Applications",
-  value: applications.length.toString(),
-      icon: FileText,
-      trend: "All time",
-      color: "success",
-    },
-    {
-      label: "Profile Views",
-      value: "—",
-      icon: Eye,
-      trend: "Coming soon",
-      color: "warning",
-    },
-    {
-      label: "Hired Tutors",
-      value: "—",
-      icon: Users,
-      trend: "Coming soon",
-      color: "accent",
-    },
-  ];
-}, [jobs, applications]);
+    return [
+      {
+        label: "Active Jobs",
+        value: activeJobs.length.toString(),
+        icon: Briefcase,
+        trend: "Live",
+        color: "primary",
+      },
+      {
+        label: "Total Applications",
+        value: applications.length.toString(),
+        icon: FileText,
+        trend: "All time",
+        color: "success",
+      },
+      {
+        label: "Profile Views",
+        value: "—",
+        icon: Eye,
+        trend: "Coming soon",
+        color: "warning",
+      },
+      {
+        label: "Hired Tutors",
+        value: "—",
+        icon: Users,
+        trend: "Coming soon",
+        color: "accent",
+      },
+    ];
+  }, [jobs, applications]);
 
 
   return (
@@ -185,11 +213,10 @@ const recentApplications = useMemo(() => {
                       <div className="mb-2 flex items-center gap-3">
                         <h3 className="font-semibold text-foreground">{job.title}</h3>
                         <span
-                          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            job.status === "active"
-                              ? "bg-success/10 text-success"
-                              : "bg-warning/10 text-warning"
-                          }`}
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${job.status === "active"
+                            ? "bg-success/10 text-success"
+                            : "bg-warning/10 text-warning"
+                            }`}
                         >
                           {job.status === "active" ? "Active" : "Paused"}
                         </span>
@@ -213,11 +240,13 @@ const recentApplications = useMemo(() => {
                       <Button variant="outline" size="sm" asChild>
                         <Link to={`/manage-applications/${job._id}`}>View Applications</Link>
                       </Button>
-                      <Button variant="outline" size="sm">
-                        Edit
-                      </Button>
-                      <Button variant="outline" size="icon" className="h-9 w-9">
-                        <MoreVertical className="h-4 w-4" />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(job._id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
                       </Button>
                     </div>
                   </div>

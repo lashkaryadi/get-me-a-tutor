@@ -2,14 +2,18 @@ import { Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useApi } from "@/hooks/useApi";
+import { useMutation } from "@/hooks/useMutation";
+import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
-import { 
-  Briefcase, 
-  MapPin, 
-  Clock, 
-  Users, 
+import {
+  Briefcase,
+  MapPin,
+  Clock,
+  Users,
   Plus,
-  Calendar
+  Calendar,
+  Trash2
 } from "lucide-react";
 
 interface Job {
@@ -28,9 +32,31 @@ interface JobsResponse {
 
 export default function InstituteJobs() {
   // Fetch jobs posted by the logged-in institute
-  // Assuming the backend returns { success: true, jobs: [...] }
-  const { data: response, loading } = useApi<JobsResponse>("/jobs/my");
+  const { data: response, loading, refetch } = useApi<JobsResponse>("/jobs/my");
   const jobs = response?.jobs || [];
+
+  const { toast } = useToast();
+  const { mutate: deleteJobMutation } = useMutation({
+    successMsg: "Job deleted successfully",
+    errorMsg: "Failed to delete job",
+    onSuccess: () => refetch(),
+  });
+
+  const handleDelete = (jobId: string) => {
+    toast({
+      title: "Are you sure?",
+      description: "This action cannot be undone.",
+      variant: "destructive",
+      action: (
+        <ToastAction
+          altText="Delete"
+          onClick={() => deleteJobMutation("DELETE", `/jobs/${jobId}`)}
+        >
+          Delete
+        </ToastAction>
+      ),
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -73,12 +99,12 @@ export default function InstituteJobs() {
                       <div className="flex items-center gap-3">
                         <h3 className="font-semibold text-lg">{job.title}</h3>
                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border capitalize
-                          ${job.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : 
+                          ${job.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' :
                             'bg-gray-100 text-gray-700 border-gray-200'}`}>
                           {job.status}
                         </span>
                       </div>
-                      
+
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1.5">
                           <MapPin className="h-4 w-4" />
@@ -97,13 +123,18 @@ export default function InstituteJobs() {
 
                     <div className="flex items-center gap-3">
                       <Button variant="outline" asChild>
-                        <Link to={`/edit-job/${job._id}`}>Edit</Link>
-                      </Button>
-                      <Button asChild>
                         <Link to={`/manage-applications/${job._id}`}>
                           <Users className="mr-2 h-4 w-4" />
                           View Applications
                         </Link>
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => handleDelete(job._id)}
+                        title="Delete Job"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>

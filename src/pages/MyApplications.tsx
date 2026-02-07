@@ -45,7 +45,7 @@ export default function MyApplications() {
       rejected: "bg-red-100 text-red-700 border-red-200",
       pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
     };
-    
+
     const icons = {
       selected: <CheckCircle className="h-3.5 w-3.5 mr-1" />,
       shortlisted: <Clock className="h-3.5 w-3.5 mr-1" />,
@@ -54,7 +54,7 @@ export default function MyApplications() {
     };
 
     const key = status as keyof typeof styles;
-    
+
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${styles[key] || styles.pending}`}>
         {icons[key] || icons.pending}
@@ -109,7 +109,7 @@ export default function MyApplications() {
                         <h3 className="font-semibold text-lg">{app.job?.title || "Job Unavailable"}</h3>
                         {getStatusBadge(app.status)}
                       </div>
-                      
+
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1.5">
                           <Building2 className="h-4 w-4" />
@@ -122,18 +122,18 @@ export default function MyApplications() {
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Calendar className="h-4 w-4" />
-Applied on {new Date(app.createdAt).toLocaleDateString()}
+                          Applied on {new Date(app.createdAt).toLocaleDateString()}
                         </div>
                       </div>
                     </div>
 
-                    {/* View Job button hidden per request */}
-                    {/* <Link
+                    {/* View Job button */}
+                    <Link
                       to={`/jobs/${app.job?._id}`}
                       className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-border hover:bg-accent text-sm font-medium transition-colors"
                     >
                       View Job <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link> */}
+                    </Link>
                   </div>
                 </div>
               ))}

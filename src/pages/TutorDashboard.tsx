@@ -3,30 +3,23 @@ import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useCredit } from "@/context/CreditContext";
-import { 
-  Briefcase, 
-  FileText, 
-  Users, 
-  Star, 
-  TrendingUp, 
-  Calendar,
+import {
+  Briefcase,
+  FileText,
   MapPin,
   IndianRupee,
-  Clock,
+  Calendar,
   CheckCircle,
   XCircle,
-  Eye,
-  BarChart3,
-  Award,
-  MessageCircle
+  Clock,
+  Award
 } from "lucide-react";
 import { useApi } from "@/hooks/useApi";
 
 export default function TutorDashboard() {
-const { credits } = useCredit();
-  // Private endpoint: GET /profile/teacher/me (requires Credit)
+  const { credits } = useCredit();
   const { data: profileData, loading: profileLoading } = useApi("/profile/teacher/me");
-  
+
   // Private endpoint: GET /applications/my (requires Credit, tutor only)
   const { data: applicationsData, loading: applicationsLoading } = useApi<{
     success: boolean;
@@ -34,36 +27,20 @@ const { credits } = useCredit();
   }>("/applications/my");
 
   const recentApplications = Array.isArray(applicationsData?.applications)
-    ? applicationsData.applications.slice(0, 4)
+    ? applicationsData.applications.slice(0, 5)
     : [];
 
-  // Mock data for stats (would be derived from applications and profile in production)
-  const stats = [
-    { 
-      label: "Total Applications", 
-      value: applicationsData?.applications?.length?.toString() ?? "0", 
-      icon: FileText, 
-      trend: "+5 this week", 
-      color: "primary" 
-    },
-    { label: "Successful Matches", value: "8", icon: CheckCircle, trend: "30% conversion", color: "success" },
-    { label: "Profile Views", value: "156", icon: Eye, trend: "+23 this week", color: "warning" },
-    { label: "Avg Rating", value: "4.9", icon: Star, trend: "Based on 42 reviews", color: "accent" },
-  ];
+  const applicationsCount = applicationsData?.applications?.length ?? 0;
 
-  // Mock data for earnings
-  const earnings = [
-    { month: "Jan", amount: 45000 },
-    { month: "Feb", amount: 38000 },
-    { month: "Mar", amount: 52000 },
-    { month: "Apr", amount: 48000 },
-    { month: "May", amount: 62000 },
-    { month: "Jun", amount: 55000 },
-  ];
-
-  const maxEarning = Math.max(...earnings.map(a => a.amount));
-
-  if (profileLoading || applicationsLoading) return <div className="p-8">Loading dashboard...</div>;
+  if (profileLoading || applicationsLoading) return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <Header />
+      <div className="flex-1 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+      <Footer />
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -74,7 +51,7 @@ const { credits } = useCredit();
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Tutor Dashboard</h1>
-            <p className="text-muted-foreground">Manage your job applications and earnings</p>
+            <p className="text-muted-foreground">Manage your job applications and profile</p>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="credit-pill bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
@@ -82,28 +59,34 @@ const { credits } = useCredit();
             </div>
             <Button asChild size="lg">
               <Link to="/feed">
-                <Briefcase className="h-5 w-5" />
+                <Briefcase className="h-5 w-5 mr-2" />
                 Browse Jobs
               </Link>
             </Button>
           </div>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - Real Data Only */}
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="rounded-2xl border border-border bg-card p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-${stat.color}/10`}>
-                  <stat.icon className={`h-6 w-6 text-${stat.color}`} />
-                </div>
-                <TrendingUp className="h-4 w-4 text-success" />
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <FileText className="h-6 w-6 text-primary" />
               </div>
-              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-              <div className="text-sm text-muted-foreground">{stat.label}</div>
-              <div className="mt-2 text-xs text-success">{stat.trend}</div>
             </div>
-          ))}
+            <div className="text-2xl font-bold text-foreground">{applicationsCount}</div>
+            <div className="text-sm text-muted-foreground">Total Applications</div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10">
+                <IndianRupee className="h-6 w-6 text-accent" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-foreground">{credits}</div>
+            <div className="text-sm text-muted-foreground">Available Credits</div>
+          </div>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-3">
@@ -120,8 +103,13 @@ const { credits } = useCredit();
 
               <div className="space-y-4">
                 {recentApplications.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">No applications yet. <Link to="/feed" className="text-primary hover:underline">Browse jobs</Link></p>
+                  <div className="text-center py-12 border border-dashed border-muted-foreground/30 rounded-xl">
+                    <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium">No applications yet</h3>
+                    <p className="text-muted-foreground mb-4">Start applying to jobs to see them here.</p>
+                    <Button asChild>
+                      <Link to="/feed">Browse Jobs</Link>
+                    </Button>
                   </div>
                 ) : (
                   recentApplications.map((app) => {
@@ -131,62 +119,50 @@ const { credits } = useCredit();
                         shortlisted: "bg-blue-100 text-blue-700 border-blue-200",
                         rejected: "bg-red-100 text-red-700 border-red-200",
                         applied: "bg-yellow-100 text-yellow-700 border-yellow-200",
+                        pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
                       };
-                      return styles[status] || "bg-gray-100 text-gray-700 border-gray-200";
+                      return styles[status] || styles.pending;
                     };
+
+                    const getStatusIcon = (status: string) => {
+                      switch (status) {
+                        case 'selected': return <CheckCircle className="h-3 w-3 mr-1" />;
+                        case 'rejected': return <XCircle className="h-3 w-3 mr-1" />;
+                        default: return <Clock className="h-3 w-3 mr-1" />;
+                      }
+                    }
 
                     return (
                       <div
                         key={app._id || app.id}
-                        className="flex flex-col gap-4 rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
+                        className="flex flex-col gap-4 rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between hover:bg-muted/5 transition-colors"
                       >
                         <div className="flex-1">
                           <div className="mb-2 flex items-center gap-3">
                             <h3 className="font-semibold text-foreground">{app.job?.title || "Job Unavailable"}</h3>
-                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium border ${getStatusBadge(app.status)}`}>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(app.status)}`}>
+                              {getStatusIcon(app.status)}
                               {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
+                              <MapPin className="h-3.5 w-3.5" />
                               {app.job?.location || "N/A"}
                             </span>
                             <span className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              Applied on {new Date(app.createdAt).toLocaleDateString()}
+                              <Calendar className="h-3.5 w-3.5" />
+                              {new Date(app.createdAt).toLocaleDateString()}
                             </span>
                           </div>
                         </div>
-                        {/* <div className="flex gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <Link to={`/jobs/${app.job?._id}`}>View Job</Link>
-                          </Button>
-                        </div> */}
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to={`/jobs/${app.job?._id}`}>View Job</Link>
+                        </Button>
                       </div>
                     );
                   })
                 )}
-              </div>
-            </div>
-
-            {/* Earnings Chart */}
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-foreground">Monthly Earnings</h2>
-                <BarChart3 className="h-5 w-5 text-muted-foreground" />
-              </div>
-
-              <div className="flex h-48 items-end justify-between gap-2">
-                {earnings.map((month) => (
-                  <div key={month.month} className="flex flex-1 flex-col items-center gap-2">
-                    <div
-                      className="w-full rounded-t-lg gradient-primary transition-all"
-                      style={{ height: `${(month.amount / maxEarning) * 100}%` }}
-                    />
-                    <span className="text-xs text-muted-foreground">{month.month}</span>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
@@ -200,7 +176,7 @@ const { credits } = useCredit();
                 {[
                   { icon: Briefcase, label: "Browse Jobs", to: "/feed" },
                   { icon: FileText, label: "My Applications", to: "/my-applications" },
-                  { icon: Award, label: "Update Profile", to: "/complete-profile" },
+                  // { icon: Award, label: "Update Profile", to: "/complete-profile" }, // temporary hide if page is not ready
                 ].map((action) => (
                   <Link
                     key={action.label}
@@ -213,23 +189,6 @@ const { credits } = useCredit();
                 ))}
               </div>
             </div>
-
-            {/* Profile Completion */}
-            {/* <div className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="mb-4 text-xl font-semibold text-foreground">Profile Strength</h2>
-              <div className="mb-4">
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Complete your profile</span>
-                  <span>75%</span>
-                </div>
-                <div className="h-2 w-full bg-muted rounded-full">
-                  <div className="h-2 bg-primary rounded-full w-3/4"></div>
-                </div>
-              </div>
-              <Button variant="outline" className="w-full" asChild>
-                <Link to="/complete-profile">Complete Profile</Link>
-              </Button>
-            </div> */}
 
             {/* Available Credits */}
             <div className="rounded-2xl border border-border bg-card p-6">

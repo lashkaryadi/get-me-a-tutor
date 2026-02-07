@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Feed from "./pages/Feed";
+import JobDetails from "./pages/JobDetails";
 import Olympiad from "./pages/Olympiad";
 import VerifyOTP from "./pages/VerifyOTP";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -43,6 +44,7 @@ const App = () => (
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/jobs" element={<Feed />} />
+          <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/tutor/:id" element={<TutorProfile />} />
           <Route path="/post-job" element={
             <ProtectedRoute allowedRoles={["institute"]}>

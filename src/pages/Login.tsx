@@ -9,6 +9,7 @@ import { GraduationCap, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useMutation } from "@/hooks/useMutation";
 import apiClient from "@/api/apiClient";
 import { getDashboardRoute } from "@/utils/navigation";
+import { playSuccessSound, playErrorSound } from "@/utils/soundUtils";
 
 interface LoginData {
   email: string;
@@ -39,6 +40,9 @@ export default function Login() {
     successMsg: "Login successful! ✅",
     errorMsg: "Invalid email or password ❌",
     onSuccess: async (data: LoginResponse) => {
+      // Play success sound
+      playSuccessSound();
+
       // Tokens save करो
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
@@ -58,6 +62,10 @@ export default function Login() {
         navigate(getDashboardRoute(data.user.role));
       }
     },
+    onError: () => {
+      // Play error sound
+      playErrorSound();
+    }
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

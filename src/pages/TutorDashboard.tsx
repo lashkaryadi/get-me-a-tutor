@@ -23,11 +23,11 @@ import {
 import { useApi } from "@/hooks/useApi";
 
 export default function TutorDashboard() {
-  const { credits } = useCredit();
-  // Private endpoint: GET /profile/teacher/me (requires auth)
+const { credits } = useCredit();
+  // Private endpoint: GET /profile/teacher/me (requires Credit)
   const { data: profileData, loading: profileLoading } = useApi("/profile/teacher/me");
   
-  // Private endpoint: GET /applications/my (requires auth, tutor only)
+  // Private endpoint: GET /applications/my (requires Credit, tutor only)
   const { data: applicationsData, loading: applicationsLoading } = useApi<{
     success: boolean;
     applications: any[];
@@ -158,11 +158,11 @@ export default function TutorDashboard() {
                             </span>
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        {/* <div className="flex gap-2">
                           <Button variant="outline" size="sm" asChild>
                             <Link to={`/jobs/${app.job?._id}`}>View Job</Link>
                           </Button>
-                        </div>
+                        </div> */}
                       </div>
                     );
                   })
@@ -200,9 +200,7 @@ export default function TutorDashboard() {
                 {[
                   { icon: Briefcase, label: "Browse Jobs", to: "/feed" },
                   { icon: FileText, label: "My Applications", to: "/my-applications" },
-                  { icon: Calendar, label: "Schedule Sessions", to: "/schedule" },
                   { icon: Award, label: "Update Profile", to: "/complete-profile" },
-                  { icon: MessageCircle, label: "Messages", to: "/messages" },
                 ].map((action) => (
                   <Link
                     key={action.label}
@@ -217,7 +215,7 @@ export default function TutorDashboard() {
             </div>
 
             {/* Profile Completion */}
-            <div className="rounded-2xl border border-border bg-card p-6">
+            {/* <div className="rounded-2xl border border-border bg-card p-6">
               <h2 className="mb-4 text-xl font-semibold text-foreground">Profile Strength</h2>
               <div className="mb-4">
                 <div className="flex justify-between text-sm mb-1">
@@ -231,7 +229,7 @@ export default function TutorDashboard() {
               <Button variant="outline" className="w-full" asChild>
                 <Link to="/complete-profile">Complete Profile</Link>
               </Button>
-            </div>
+            </div> */}
 
             {/* Available Credits */}
             <div className="rounded-2xl border border-border bg-card p-6">

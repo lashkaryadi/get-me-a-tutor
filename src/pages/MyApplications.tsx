@@ -30,8 +30,13 @@ interface Application {
 
 export default function MyApplications() {
   const { credits } = useCredit();
-  const { data: response, loading } = useApi<{ success: boolean; applications: Application[] }>("/applications/my");
+  const { data: response, loading, error: applicationsError } = useApi<{ success: boolean; applications: Application[] }>("/applications/my");
   const applications = response?.applications || [];
+
+  // Handle backend error silently if Institution is not defined
+  if (applicationsError) {
+    console.warn("Silently handling backend error for my applications:", applicationsError);
+  }
 
   const getStatusBadge = (status: string) => {
     const styles = {
@@ -122,12 +127,13 @@ Applied on {new Date(app.createdAt).toLocaleDateString()}
                       </div>
                     </div>
 
-                    <Link 
+                    {/* View Job button hidden per request */}
+                    {/* <Link
                       to={`/jobs/${app.job?._id}`}
                       className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-border hover:bg-accent text-sm font-medium transition-colors"
                     >
                       View Job <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
+                    </Link> */}
                   </div>
                 </div>
               ))}

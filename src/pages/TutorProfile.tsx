@@ -183,8 +183,8 @@ export default function TutorProfile() {
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+            {/* Actions - TEMPORARILY HIDDEN */}
+            {/* <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
               <Button size="lg">
                 <Calendar className="h-5 w-5" />
                 Book a Session
@@ -201,7 +201,7 @@ export default function TutorProfile() {
                   <Share2 className="h-5 w-5" />
                 </Button>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -341,8 +341,8 @@ export default function TutorProfile() {
           {/* Sidebar - Booking Widget */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
-              {/* Price Card */}
-              <div className="rounded-2xl border border-border bg-card p-6">
+              {/* Price Card - TEMPORARILY HIDDEN */}
+              {/* <div className="rounded-2xl border border-border bg-card p-6">
                 <div className="mb-4 text-center">
                   <div className="flex items-center justify-center text-3xl font-bold text-foreground">
                     <IndianRupee className="h-6 w-6" />
@@ -359,7 +359,7 @@ export default function TutorProfile() {
                 <p className="mt-4 text-center text-sm text-muted-foreground">
                   Free cancellation up to 24 hours before session
                 </p>
-              </div>
+              </div> */}
 
               {/* Availability */}
               <div className="rounded-2xl border border-border bg-card p-6">

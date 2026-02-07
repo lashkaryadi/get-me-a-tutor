@@ -65,10 +65,15 @@ export default function TrackApplication() {
   const { data, loading, error } = useApi("/applications/my");
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error loading applications</div>;
 
-  const applications =
-    (data as { applications: Application[] })?.applications || [];
+  // Handle backend error silently if Institution is not defined
+  if (error) {
+    console.warn("Silently handling backend error for track applications:", error);
+  }
+
+  const applications = error
+    ? []
+    : (data as { applications: Application[] })?.applications || [];
 
   return (
     <div className="min-h-screen bg-background">

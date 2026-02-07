@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useMutation } from "@/hooks/useMutation";
 import { useToast } from "@/hooks/use-toast";
+import { playSuccessSound, playErrorSound } from "@/utils/soundUtils";
 
 interface SignupData {
   name: string;
@@ -85,6 +86,9 @@ export default function Signup() {
   const { mutate, isLoading } = useMutation({
     errorMsg: "Signup failed ❌",
     onSuccess: (data: SignupResponse) => {
+      // Play success sound
+      playSuccessSound();
+
       // Show success toast
       toast({
         title: "Success",
@@ -100,6 +104,10 @@ export default function Signup() {
         navigate(`/verify-otp?type=email&contact=${formData.email}`);
       }, 1000);
     },
+    onError: () => {
+      // Play error sound
+      playErrorSound();
+    }
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

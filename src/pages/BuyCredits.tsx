@@ -30,17 +30,17 @@ export default function BuyCredits() {
    */
   const handlePayment = async (amount: number, credits: number) => {
     if (loading) return;
-    
+
     setLoading(true);
     try {
       // Get user role from localStorage
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       if (!user || !user.role) {
-        throw new Error("User not authenticated");
+        throw new Error("User not Creditenticated");
       }
 
       // Step 1: Create Razorpay order
-      const response = await apiClient.post("/api/payments/create-order", { 
+      const response = await apiClient.post("/api/payments/create-order", {
         amount,
         credits,
         role: user.role

@@ -1,7 +1,7 @@
 import apiClient from "@/api/apiClient";
 import { useApi } from "@/hooks/useApi";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Header } from "@/components/layout/Header";
@@ -68,12 +68,25 @@ interface JobsResponse {
 }
 
 export default function Feed() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSearchQuery = searchParams.get('q') || '';
+  const initialSubject = searchParams.get('subject') || 'All Subjects';
+
   // Public endpoint: GET /jobs/alljobs (matches backend contract)
-  const { data, loading, error } = useApi<JobsResponse>("/jobs/alljobs");
+  // Build API URL with query parameters
+  const buildJobsApiUrl = () => {
+    const params = new URLSearchParams();
+    if (initialSearchQuery) params.append('q', initialSearchQuery);
+    if (initialSubject && initialSubject !== 'All Subjects') params.append('subject', initialSubject);
+    return `/jobs/alljobs${params.toString() ? '?' + params.toString() : ''}`;
+  };
+
+  const [apiUrl, setApiUrl] = useState(buildJobsApiUrl());
+  const { data, loading, error, refetch } = useApi<JobsResponse>(apiUrl);
   const jobs = Array.isArray(data?.jobs) ? data.jobs : [];
 
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"tutors" | "jobs">("tutors");
+  const [activeTab, setActiveTab] = useState<"tutors" | "jobs">("jobs"); // Changed default to jobs for better UX
   // Public endpoint: GET /profile/public
   const {
     data: teacherResponse,
@@ -83,8 +96,8 @@ export default function Feed() {
 
   const tutors: Tutor[] = teacherResponse?.teachers ?? [];
 
-  const [selectedSubject, setSelectedSubject] = useState("All Subjects");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState(initialSubject);
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [showFilters, setShowFilters] = useState(false);
   const [hasShownError, setHasShownError] = useState(false);
 
@@ -97,6 +110,30 @@ export default function Feed() {
       });
     }
   }, [error, toast]);
+
+  // Update URL when search parameters change
+  useEffect(() => {
+    const params: { [key: string]: string } = {};
+
+    if (searchQuery.trim()) {
+      params.q = searchQuery.trim();
+    }
+
+    if (selectedSubject && selectedSubject !== 'All Subjects') {
+      params.subject = selectedSubject;
+    }
+
+    // Only update if there are actual changes
+    const currentQ = searchParams.get('q');
+    const currentSubject = searchParams.get('subject');
+
+    if (
+      (params.q || currentQ) && params.q !== currentQ ||
+      (params.subject || currentSubject) && params.subject !== currentSubject
+    ) {
+      setSearchParams(params);
+    }
+  }, [searchQuery, selectedSubject, setSearchParams, searchParams]);
 
   if (teacherLoading) return <div className="p-8">Loading tutors...</div>;
   if (teacherError)
@@ -131,6 +168,17 @@ export default function Feed() {
                 className="pl-10 sm:pl-12"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    // Build new API URL with current search parameters
+                    const params = new URLSearchParams();
+                    if (searchQuery.trim()) params.append('q', searchQuery.trim());
+                    if (selectedSubject && selectedSubject !== 'All Subjects') params.append('subject', selectedSubject);
+
+                    const newApiUrl = `/jobs/alljobs${params.toString() ? '?' + params.toString() : ''}`;
+                    setApiUrl(newApiUrl); // This will trigger a new API call
+                  }
+                }}
               />
             </div>
 
@@ -151,7 +199,15 @@ export default function Feed() {
                 <span className="ml-2">Filters</span>
               </Button>
 
-              <Button className="flex-1">
+              <Button className="flex-1" onClick={() => {
+                // Build new API URL with current search parameters
+                const params = new URLSearchParams();
+                if (searchQuery.trim()) params.append('q', searchQuery.trim());
+                if (selectedSubject && selectedSubject !== 'All Subjects') params.append('subject', selectedSubject);
+
+                const newApiUrl = `/jobs/alljobs${params.toString() ? '?' + params.toString() : ''}`;
+                setApiUrl(newApiUrl); // This will trigger a new API call
+              }}>
                 <Search className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="ml-2">Search</span>
               </Button>
@@ -170,7 +226,17 @@ export default function Feed() {
                     {subjects.slice(0, 5).map((subject) => (
                       <button
                         key={subject}
-                        onClick={() => setSelectedSubject(subject)}
+                        onClick={() => {
+                          setSelectedSubject(subject);
+
+                          // Build new API URL with current search parameters
+                          const params = new URLSearchParams();
+                          if (searchQuery.trim()) params.append('q', searchQuery.trim());
+                          if (subject && subject !== 'All Subjects') params.append('subject', subject);
+
+                          const newApiUrl = `/jobs/alljobs${params.toString() ? '?' + params.toString() : ''}`;
+                          setApiUrl(newApiUrl); // This will trigger a new API call
+                        }}
                         className={`rounded-full px-3 py-1 text-xs transition-colors sm:px-4 sm:py-1.5 sm:text-sm ${
                           selectedSubject === subject
                             ? "bg-primary text-primary-foreground"

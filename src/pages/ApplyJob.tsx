@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { getDashboardRoute } from "@/utils/navigation";
 import { useCredit } from "@/context/CreditContext";
+import { playSuccessSound, playErrorSound } from "@/utils/soundUtils";
 
 interface Job {
   id: string;
@@ -70,6 +71,11 @@ export default function ApplyJob() {
     successMsg: "Application submitted successfully! ✅",
     errorMsg: "Failed to submit application ❌",
     onSuccess: async () => {
+      // Play success sound
+      playSuccessSound();
+
+      // Add a small delay to ensure backend processes the deduction
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
       await refreshCredits(); // Refresh credits after successful application
       setTimeout(() => {
         // Get user role from localStorage to determine redirect
@@ -82,6 +88,10 @@ export default function ApplyJob() {
         }
       }, 1500);
     },
+    onError: () => {
+      // Play error sound
+      playErrorSound();
+    }
   });
 
   const [formData, setFormData] = useState<ApplicationData>({
@@ -243,7 +253,7 @@ export default function ApplyJob() {
                   <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-800">
                     <p className="font-semibold">You don't have enough credits to apply</p>
                     <p className="text-sm mt-1">You need 1 credit to apply for this job. Purchase credits to continue.</p>
-                    <Button 
+                    <Button
                       className="mt-3 bg-yellow-600 hover:bg-yellow-700"
                       onClick={handleBuyCreditsClick}
                     >

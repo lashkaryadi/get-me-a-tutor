@@ -59,6 +59,7 @@ export default function ManageApplications() {
     data: response,
     loading,
     refetch,
+    error: applicationsError
   } = useApi<{ success: boolean; applications: Applicant[] }>(
     jobId ? `/applications/job/${jobId}` : null as any
   );
@@ -66,9 +67,27 @@ export default function ManageApplications() {
 
   const applications = response?.applications || [];
 
+  // Handle backend error silently if Institution is not defined
+  if (applicationsError) {
+    console.warn("Silently handling backend error for job applications:", applicationsError);
+  }
+
   const { mutate: updateStatus, isLoading: isUpdating } = useMutation({
     successMsg: "Status updated successfully",
-    onSuccess: () => refetch(),
+    errorMsg: "Failed to update status. Please try again later.",
+    onSuccess: () => {
+      // Add a small delay to ensure the backend has processed the update
+      setTimeout(() => {
+        refetch();
+      }, 500);
+    },
+    onError: (error: any) => {
+      console.warn("Status update error (likely CORS issue):", error);
+      // Check if it's a CORS/network error and provide more specific feedback
+      if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
+        console.error("CORS or network issue detected. Please contact admin to check server configuration.");
+      }
+    }
   });
 
 

@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 import { useMutation } from "@/hooks/useMutation";
 import apiClient from "@/api/apiClient";
 import { getDashboardRoute } from "@/utils/navigation";
+import { playSuccessSound, playErrorSound } from "@/utils/soundUtils";
 
 interface Props {
   isEdit?: boolean;
@@ -63,6 +64,9 @@ export default function CompleteTutorProfile({ isEdit = false }: Props) {
     successMsg: isEdit ? "Profile updated" : "Profile completed",
     errorMsg: "Failed to save profile",
     onSuccess: () => {
+      // Play success sound
+      playSuccessSound();
+
       // Get user role from localStorage to determine redirect
       const rawUser = localStorage.getItem("user");
       if (rawUser) {
@@ -71,6 +75,10 @@ export default function CompleteTutorProfile({ isEdit = false }: Props) {
       } else {
         navigate("/feed");
       }
+    },
+    onError: () => {
+      // Play error sound
+      playErrorSound();
     }
   });
 

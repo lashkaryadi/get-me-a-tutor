@@ -24,6 +24,7 @@ import NotFound from "./pages/NotFound";
 import InstituteJobs from "./pages/InstituteJobs";
 import BuyCredits from "./pages/BuyCredits";
 import TutorDashboard from "./pages/TutorDashboard";
+import ParentDashboard from "./pages/ParentDashboard";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -85,6 +86,11 @@ const App = () => (
           <Route path="/student/dashboard" element={
             <ProtectedRoute allowedRoles={["student"]}>
               <StudentDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/parent/dashboard" element={
+            <ProtectedRoute allowedRoles={["parent"]}>
+              <ParentDashboard />
             </ProtectedRoute>
           } />
           <Route path="/buy-credits" element={<BuyCredits />} />

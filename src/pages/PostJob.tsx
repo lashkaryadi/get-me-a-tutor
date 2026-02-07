@@ -10,6 +10,7 @@ import { Footer } from "@/components/layout/Footer";
 import { useMutation } from "@/hooks/useMutation";
 import { getDashboardRoute } from "@/utils/navigation";
 import { useCredit } from "@/context/CreditContext";
+import { playSuccessSound, playErrorSound } from "@/utils/soundUtils";
 
 import {
   ArrowLeft,
@@ -77,6 +78,11 @@ export default function PostJob() {
     successMsg: "Job posted successfully",
     errorMsg: "Failed to post job",
     onSuccess: async () => {
+      // Play success sound
+      playSuccessSound();
+
+      // Add a small delay to ensure backend processes the deduction
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
       await refreshCredits(); // Refresh credits after successful job posting
       // Get user role from localStorage to determine redirect
       const rawUser = localStorage.getItem("user");
@@ -86,6 +92,10 @@ export default function PostJob() {
       } else {
         navigate("/jobs");
       }
+    },
+    onError: () => {
+      // Play error sound
+      playErrorSound();
     }
   });
 
@@ -171,11 +181,10 @@ export default function PostJob() {
                 <div key={step.num} className="flex items-center">
                   <div className="flex flex-col items-center">
                     <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold ${
-                        currentStep >= step.num
-                          ? "gradient-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
-                      }`}
+                      className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold ${currentStep >= step.num
+                        ? "gradient-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                        }`}
                     >
                       {currentStep > step.num ? (
                         <CheckCircle className="h-5 w-5" />
@@ -189,9 +198,8 @@ export default function PostJob() {
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`mx-4 h-0.5 w-16 ${
-                        currentStep > step.num ? "bg-primary" : "bg-muted"
-                      }`}
+                      className={`mx-4 h-0.5 w-16 ${currentStep > step.num ? "bg-primary" : "bg-muted"
+                        }`}
                     />
                   )}
                 </div>
@@ -228,11 +236,10 @@ export default function PostJob() {
                           key={subject}
                           type="button"
                           onClick={() => updateForm("subject", subject)}
-                          className={`rounded-full px-4 py-2 text-sm transition-colors ${
-                            formData.subject === subject
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground hover:bg-muted/80"
-                          }`}
+                          className={`rounded-full px-4 py-2 text-sm transition-colors ${formData.subject === subject
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            }`}
                         >
                           {subject}
                         </button>
@@ -273,11 +280,10 @@ export default function PostJob() {
                           key={level}
                           type="button"
                           onClick={() => updateForm("experience", level)}
-                          className={`rounded-full px-4 py-2 text-sm transition-colors ${
-                            formData.experience === level
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground hover:bg-muted/80"
-                          }`}
+                          className={`rounded-full px-4 py-2 text-sm transition-colors ${formData.experience === level
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            }`}
                         >
                           {level}
                         </button>
@@ -346,11 +352,10 @@ export default function PostJob() {
                           key={type}
                           type="button"
                           onClick={() => updateForm("jobType", type)}
-                          className={`rounded-full px-4 py-2 text-sm transition-colors ${
-                            formData.jobType === type
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground hover:bg-muted/80"
-                          }`}
+                          className={`rounded-full px-4 py-2 text-sm transition-colors ${formData.jobType === type
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            }`}
                         >
                           {type}
                         </button>

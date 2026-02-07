@@ -58,7 +58,7 @@ const analytics = [
 ];
 
 export default function InstituteDashboard() {
-  const { credits } = useCredit();
+    const { credits } = useCredit();
   const { data, loading } = useApi<{ success: boolean; jobs: any[] }>("/jobs/my");
 const jobs = useMemo(
   () => (Array.isArray(data?.jobs) ? data.jobs : []),
@@ -66,7 +66,7 @@ const jobs = useMemo(
 );
 
 
-  const { data: appsData } = useApi<{ success: boolean; applications: any[] }>(
+  const { data: appsData, error: appsError } = useApi<{ success: boolean; applications: any[] }>(
   "/applications/my-received"
 );
 const applications = useMemo(
@@ -74,7 +74,14 @@ const applications = useMemo(
   [appsData?.applications]
 );
 
-const recentApplications = applications.slice(0, 4);
+// Handle backend error silently - if there's an error, show empty array
+const recentApplications = useMemo(() => {
+  if (appsError) {
+    console.warn("Silently handling backend error for received applications:", appsError);
+    return []; // Return empty array if there's an error
+  }
+  return applications.slice(0, 4);
+}, [applications, appsError]);
 
 
   const maxApplications = Math.max(...analytics.map((a) => a.applications));
@@ -130,11 +137,6 @@ const recentApplications = applications.slice(0, 4);
             <div className="credit-pill bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
               Credits: {credits}
             </div>
-            <Button variant="outline" size="lg" asChild>
-              <Link to="/buy-credits">
-                Buy Credits
-              </Link>
-            </Button>
             <Button asChild size="lg">
               <Link to="/post-job">
                 <Plus className="h-5 w-5" />
@@ -248,49 +250,6 @@ const recentApplications = applications.slice(0, 4);
 
           {/* Sidebar */}
           <div className="space-y-8">
-            {/* Recent Applications */}
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-foreground">Recent Applications</h2>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/institute/jobs">View All</Link>
-                </Button>
-              </div>
-
-              <div className="space-y-4">
-                {recentApplications.map((app) => (
-                  <div key={app._id} className="flex items-start justify-between border-b border-border pb-4 last:border-0 last:pb-0">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
-                        {app.tutor?.name
-          ? app.tutor.name.split(" ").map((n) => n[0]).join("")
-          : "U"}
-                      </div>
-                      <div>
-                        <div className="font-medium text-foreground">          {app.tutor?.name || "Unknown Tutor"}
-</div>
-                        <div className="text-sm text-muted-foreground">          {app.job?.title || "Job"}
-</div>
-                        <div className="text-xs text-muted-foreground">          {new Date(app.createdAt).toLocaleDateString()}
-</div>
-                      </div>
-                    </div>
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs font-medium ${
-                        app.status === "pending"
-                          ? "bg-warning/10 text-warning"
-                          : app.status === "shortlisted"
-                          ? "bg-success/10 text-success"
-                          : "bg-destructive/10 text-destructive"
-                      }`}
-                    >
-                      {app.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Quick Actions */}
             <div className="rounded-2xl border border-border bg-card p-6">
               <h2 className="mb-4 text-xl font-semibold text-foreground">Quick Actions</h2>
@@ -298,8 +257,6 @@ const recentApplications = applications.slice(0, 4);
                 {[
                   { icon: Plus, label: "Post New Job", to: "/post-job" },
                   { icon: Users, label: "View Applications", to: "/institute/jobs" },
-                  { icon: Calendar, label: "Schedule Interviews", to: "/institute/interviews" },
-                  { icon: Settings, label: "Institute Settings", to: "/institute/settings" },
                 ].map((action) => (
                   <Link
                     key={action.label}
@@ -311,6 +268,21 @@ const recentApplications = applications.slice(0, 4);
                   </Link>
                 ))}
               </div>
+            </div>
+
+            {/* Available Credits */}
+            <div className="rounded-2xl border border-border bg-card p-6">
+              <h2 className="mb-4 text-xl font-semibold text-foreground">Credits</h2>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-2xl font-bold text-primary">{credits}</span>
+                <IndianRupee className="h-8 w-8 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Each job posting costs 1 credit
+              </p>
+              <Button className="w-full" asChild>
+                <Link to="/buy-credits">Buy More Credits</Link>
+              </Button>
             </div>
           </div>
         </div>

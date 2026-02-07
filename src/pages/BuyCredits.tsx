@@ -80,28 +80,24 @@ export default function BuyCredits() {
             );
 
             if (verifyResponse.data.success) {
-              // Step 4 & 5: Webhook handles credits, we refresh and redirect
+              // Step 4: Immediate update (backend now adds credits synchronously)
               toast({
                 title: "Payment Successful ✅",
-                description: "Credits will be added to your account shortly.",
+                description: "Credits have been added to your account.",
               });
 
-              await new Promise((resolve) => setTimeout(resolve, 1500));
-
+              // No delay needed anymore - credits are added synchronously
               try {
-                await refreshCredits(); // Will retry automatically with exponential backoff
+                await refreshCredits();
 
                 toast({
                   title: "Credits Updated! ✅",
-                  description: "Your credits have been added successfully.",
+                  description: "Your new balance is now available.",
                 });
               } catch (error) {
-                // Payment succeeded but credit sync delayed
-                toast({
-                  title: "Credit Sync Delayed ⏳",
-                  description: "Your payment was successful, but credits are still processing. Please refresh in a moment.",
-                  variant: "default",
-                });
+                console.warn("Credit refresh failed, but payment succeeded:", error);
+                // Even if refresh fails, the credits are in DB. 
+                // Next page load will show them.
               }
 
               // Redirect to appropriate dashboard

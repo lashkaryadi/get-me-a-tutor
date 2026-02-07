@@ -74,13 +74,11 @@ export default function ApplyJob() {
       // Play success sound
       playSuccessSound();
 
-      // Add a small delay to ensure backend processes the deduction
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-
+      // No delay needed - credit deduction is synchronous
       try {
-        await refreshCredits(); // Will retry automatically
+        await refreshCredits(); // Refresh credits after successful application
       } catch (error) {
-        console.warn("Credit refresh failed after application, but application was submitted successfully");
+        console.warn("Credit refresh failed, but application submitted:", error);
         // Don't block navigation - application was submitted successfully
       }
 

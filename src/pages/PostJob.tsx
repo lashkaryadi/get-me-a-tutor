@@ -81,13 +81,11 @@ export default function PostJob() {
       // Play success sound
       playSuccessSound();
 
-      // Add a small delay to ensure backend processes the deduction
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-
+      // No delay needed - credit deduction is synchronous
       try {
-        await refreshCredits(); // Will retry automatically
+        await refreshCredits(); // Refresh credits after successful job posting
       } catch (error) {
-        console.warn("Credit refresh failed after job post, but job was created successfully");
+        console.warn("Credit refresh failed, but job posted:", error);
         // Don't block navigation - job was posted successfully
       }
 

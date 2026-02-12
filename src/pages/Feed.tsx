@@ -305,9 +305,10 @@ export default function Feed() {
             </button>
             <button
               onClick={() => setActiveTab("tutors")}
-              className={`relative px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${activeTab === "tutors"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+              className={`relative px-6 py-2.5 rounded-xl 
+                  text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${activeTab === "tutors"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
                 }`}
             >
               <User className="h-4 w-4" />
